@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>After-Care Calendar: Prototype</title>
+<style>
+  :root { --ink:#1b1f24; --muted:#5b6470; --line:#d6dbe1; --bg:#f6f8fa; --card:#ffffff;
+          --accent:#0b5cad; --ok:#1e7b3a; --warn:#9a5b00; --bad:#a1262d; --ok-bg:#e7f5ec; --warn-bg:#fff4df; --bad-bg:#fbe9ea; }
+  * { box-sizing: border-box; }
+  body { margin:0; font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--ink); color:#fff; padding:16px 20px; }
+  header h1 { margin:0; font-size:22px; font-weight:650; }
+  header p { margin:4px 0 0; color:#c9d1da; font-size:15px; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px; }
+  .disclaimer { background:#fff8e6; border:1px solid #e8c766; padding:12px 16px; border-radius:8px; font-size:16px; margin-bottom:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; margin-bottom:18px; }
+  h2 { font-size:21px; margin:0 0 10px; }
+  h3 { font-size:18px; margin:14px 0 6px; }
+  textarea { width:100%; min-height:180px; font: 16px/1.45 ui-monospace, Menlo, Consolas, monospace; padding:12px; border:1px solid var(--line); border-radius:8px; }
+  button { font: inherit; font-size:18px; padding:10px 18px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; margin:4px 6px 4px 0; }
+  button.secondary { background:#fff; color:var(--accent); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  input, select { font: inherit; font-size:17px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  label { display:inline-block; margin:6px 16px 6px 0; }
+  table { width:100%; border-collapse:collapse; font-size:16px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:15px; color:var(--muted); font-weight:600; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:14px; font-weight:600; }
+  .b-ok { background:var(--ok-bg); color:var(--ok); }
+  .b-warn { background:var(--warn-bg); color:var(--warn); }
+  .b-bad { background:var(--bad-bg); color:var(--bad); }
+  .snippet { color:var(--muted); font-size:14px; font-style:italic; }
+  .prefs { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:10px 18px; }
+  .prefs label { display:flex; flex-direction:column; margin:0; font-size:16px; color:var(--muted); }
+  .steps { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .step { padding:6px 12px; border-radius:999px; background:#e3e8ee; color:var(--muted); font-size:15px; }
+  .step.on { background:var(--accent); color:#fff; }
+  .feed { font-family: ui-monospace, Menlo, Consolas, monospace; background:#f1f4f7; padding:10px 12px; border-radius:6px; word-break:break-all; font-size:15px; }
+  .muted { color:var(--muted); font-size:16px; }
+  .hidden { display:none; }
+  ul.events { padding-left:20px; }
+  ul.events li { margin:4px 0; }
+  .note { font-size:15px; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Patient After-Care Support Calendar</h1>
+  <p>Prototype for Cal Hacks demo. Synthetic data only. Not medical advice.</p>
+</header>
+<main>
+
+<div class="disclaimer">This calendar is generated from your prescription document and is for reminder purposes only. It is not medical advice. Always follow your provider's and pharmacist's instructions.</div>
+
+<div class="steps" id="steps">
+  <span class="step on" data-step="1">1. Upload</span>
+  <span class="step" data-step="2">2. Review</span>
+  <span class="step" data-step="3">3. Preferences</span>
+  <span class="step" data-step="4">4. Download</span>
+</div>
+
+<!-- STEP 1: UPLOAD -->
+<section id="s1" class="card">
+  <h2>Upload a discharge prescription</h2>
+  <p class="muted">Paste the text from a discharge document, or load the synthetic sample. Photo and PDF upload are on the roadmap; this prototype reads pasted text.</p>
+  <textarea id="docText" aria-label="Prescription text"></textarea>
+  <div>
+    <button class="secondary" id="loadSample">Load sample discharge sheet</button>
+    <button id="extract">Extract medications</button>
+  </div>
+  <p class="note" id="extractMsg"></p>
+</section>
+
+<!-- STEP 2: REVIEW -->
+<section id="s2" class="card hidden">
+  <h2>Review extracted medications</h2>
+  <p class="muted">Check every item against the original document. Items flagged for review cannot be scheduled until you confirm them.</p>
+  <div style="overflow-x:auto">
+  <table>
+    <thead><tr><th>Use</th><th>Medication</th><th>Dose</th><th>Times/day</th><th>Days</th><th>Confidence</th><th>Status</th></tr></thead>
+    <tbody id="medRows"></tbody>
+  </table>
+  </div>
+  <p class="snippet" id="sourceNote"></p>
+  <div>
+    <button class="secondary" id="backTo1">Back</button>
+    <button id="toPrefs">Continue to preferences</button>
+  </div>
+</section>
+
+<!-- STEP 3: PREFERENCES -->
+<section id="s3" class="card hidden">
+  <h2>Set your daily times</h2>
+  <p class="muted">These times are used to place doses. Doses that say "with food" line up with the nearest meal.</p>
+  <div class="prefs">
+    <label>Start date <input type="date" id="startDate"></label>
+    <label>Wake time <input type="time" id="wake" value="07:00"></label>
+    <label>Breakfast <input type="time" id="bfast" value="08:00"></label>
+    <label>Lunch <input type="time" id="lunch" value="12:30"></label>
+    <label>Dinner <input type="time" id="dinner" value="18:30"></label>
+    <label>Bedtime <input type="time" id="bed" value="22:00"></label>
+    <label>Reminder lead time
+      <select id="lead"><option value="0">At dose time</option><option value="5">5 min before</option><option value="10" selected>10 min before</option><option value="30">30 min before</option></select>
+    </label>
+    <label>Time zone
+      <select id="tz">
+        <option value="America/Los_Angeles" selected>Pacific (Los Angeles)</option>
+        <option value="America/Denver">Mountain (Denver)</option>
+        <option value="America/Chicago">Central (Chicago)</option>
+        <option value="America/New_York">Eastern (New York)</option>
+      </select>
+    </label>
+    <label>Days for ongoing meds <input type="number" id="ongoingDays" value="14" min="1" max="90"></label>
+  </div>
+  <div style="margin-top:14px">
+    <button class="secondary" id="backTo2">Back</button>
+    <button id="generate">Build calendar</button>
+  </div>
+  <p class="note" id="genMsg"></p>
+</section>
+
+<!-- STEP 4: DOWNLOAD -->
+<section id="s4" class="card hidden">
+  <h2>Your calendar is ready</h2>
+  <h3>Upcoming doses (first day)</h3>
+  <ul class="events" id="preview"></ul>
+  <p class="muted" id="notScheduled"></p>
+
+  <h3>Subscribe once (recommended)</h3>
+  <p class="muted">Add this link in Google Calendar (Other calendars, From URL), Apple Calendar (Add Subscription), or Outlook (Add calendar, Subscribe from web). Changes show up on refresh; Outlook can take up to 24 hours.</p>
+  <div class="feed" id="feedUrl"></div>
+  <p class="note">In the full product, this link is served by the backend. In this prototype it is a placeholder, so use the download below.</p>
+
+  <h3>Download the file</h3>
+  <button id="download">Download calendar (.ics)</button>
+  <button class="secondary" id="restart">Start over</button>
+</section>
+
+</main>
+
+<script>
+// ---------- Sample synthetic discharge sheet ----------
+const SAMPLE = `DISCHARGE PRESCRIPTIONS (SYNTHETIC)
+1. Amoxicillin 500 mg PO BID with food x 10 days
+2. Acetaminophen 325 mg PO every 6 hours as needed for pain
+3. Prednisone taper: 30 mg PO daily x 3 days, then 20 mg daily x 3 days, then 10 mg daily x 3 days
+4. Metformin 500 mg PO daily with dinner
+5. Lisinopril 10 mg PO once daily`;
+
+// ---------- State ----------
+let meds = [];     // extracted + reviewed records
+let icsText = "";  // generated calendar text
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- Rule-based extraction (demo parser; production uses Claude API with JSON schema) ----------
+function parseFreq(line) {
+  const l = line.toLowerCase();
+  if (/\bas needed\b|\bprn\b/.test(l)) return { perDay: 0, text: "as needed", prn: true, withFood: /with food/.test(l), dinner: false };
+  let m = l.match(/every (\d+) hours?/);
+  if (m) return { perDay: Math.max(1, Math.round(24 / +m[1])), text: `every ${m[1]} hours`, prn: false, withFood: /with food/.test(l), dinner: false };
+  if (/\bqid\b/.test(l)) return { perDay: 4, text: "four times daily", prn: false };
+  if (/\btid\b|three times daily/.test(l)) return { perDay: 3, text: "three times daily", prn: false };
+  if (/\bbid\b|twice daily|q12h/.test(l)) return { perDay: 2, text: "twice daily", prn: false, withFood: /with food/.test(l) };
+  if (/\bqhs\b|at bedtime/.test(l)) return { perDay: 1, text: "at bedtime", prn: false, bedtime: true };
+  if (/once daily|\bdaily\b|every day/.test(l)) return { perDay: 1, text: "once daily", prn: false, dinner: /dinner/.test(l) };
+  return null;
+}
+
+function parseLine(raw, idx) {
+  const line = raw.replace(/^\d+\.\s*/, "").trim();
+  const strength = line.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|mL)/i);
+  if (!strength) return null;
+  let name = line.slice(0, strength.index).replace(/taper:?/i, "").trim();
+  const f = parseFreq(line);
+  const isTaper = /\bthen\b/i.test(line);
+  const days = line.match(/x\s*(\d+)\s*days?/i);
+  const rec = {
+    id: `med${idx}`,
+    name: name || "Unknown medication",
+    dose: `${strength[1]} ${strength[2].toLowerCase()}`,
+    dose_unit: strength[2].toLowerCase(),
+    frequency: f ? f.text : "unclear",
+    perDay: f ? f.perDay : 0,
+    prn: f ? f.prn : false,
+    bedtime: f ? !!f.bedtime : false,
+    dinner: f ? !!f.dinner : false,
+    withFood: f ? !!f.withFood : false,
+    taper: isTaper,
+    days: days ? +days[1] : null,
+    source: line,
+    include: true,
+    confirmed: false,
+    confidence: 0.95
+  };
+  if (isTaper) {
+    rec.phases = line.split(/\bthen\b/i).map((seg, i) => {
+      const d = seg.match(/(\d+)\s*(mg|mcg|mL)/i);
+      const n = seg.match(/x\s*(\d+)\s*days?/i);
+      return { order: i + 1, dose: d ? `${d[1]} ${d[2].toLowerCase()}` : "?", days: n ? +n[1] : null };
+    });
+    rec.confidence = 0.5;
+  }
+  if (!f) rec.confidence = Math.min(rec.confidence, 0.4);
+  if (!rec.days && !rec.prn && !isTaper) rec.confidence = Math.min(rec.confidence, 0.7);
+  return rec;
+}
+
+function extract(text) {
+  return text.split(/\n/).map((l, i) => /^\s*\d+\./.test(l) || /\b(mg|mcg|mL)\b/i.test(l) ? parseLine(l, i) : null).filter(Boolean);
+}
+
+function statusOf(m) {
+  if (m.taper) return { cls: "b-warn", label: "Taper: review required, not scheduled", schedulable: false };
+  if (m.prn) return { cls: "b-warn", label: "As needed: listed, not scheduled", schedulable: false };
+  if (!m.perDay) return { cls: "b-bad", label: "Frequency unclear: flagged", schedulable: false };
+  if (m.confidence < 0.8) return { cls: "b-warn", label: "Check: low confidence", schedulable: true };
+  if (!m.days) return { cls: "b-warn", label: "Ongoing: confirm with provider", schedulable: true };
+  return { cls: "b-ok", label: "Ready", schedulable: true };
+}
+
+// ---------- Review screen ----------
+function renderReview() {
+  const rows = meds.map((m, i) => {
+    const st = statusOf(m);
+    const days = m.taper ? m.phases.map(p => `${p.dose} x ${p.days ?? "?"}d`).join(" → ") : (m.days ? m.days : "Ongoing");
+    const times = m.perDay ? m.perDay : "-";
+    return `<tr>
+      <td><input type="checkbox" data-i="${i}" data-k="include" ${m.include ? "checked" : ""}></td>
+      <td><strong>${esc(m.name)}</strong><div class="snippet">"${esc(m.source)}"</div></td>
+      <td>${esc(m.dose)}</td>
+      <td>${times}<div class="snippet">${esc(m.frequency)}</div></td>
+      <td>${esc(days)}</td>
+      <td>${Math.round(m.confidence*100)}%</td>
+      <td><span class="badge ${st.cls}">${st.label}</span>
+          ${st.schedulable && m.include ? `<div><label><input type="checkbox" data-i="${i}" data-k="confirmed" ${m.confirmed ? "checked":""}> I checked this</label></div>` : ""}
+      </td></tr>`;
+  }).join("");
+  $("medRows").innerHTML = rows || `<tr><td colspan="7">No medications found. Check the pasted text.</td></tr>`;
+  $("sourceNote").textContent = "Each row shows the exact line from your document. Confirm each schedulable item before building the calendar.";
+  document.querySelectorAll("#medRows input").forEach(el => el.addEventListener("change", e => {
+    const m = meds[+e.target.dataset.i];
+    m[e.target.dataset.k] = e.target.checked;
+    if (e.target.dataset.k === "include") renderReview();
+  }));
+}
+
+// ---------- ICS generation ----------
+function tzOffsetMs(date, tz) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" })
+    .formatToParts(date).map(x => [x.type, x.value]));
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - date.getTime();
+}
+function zonedToUtc(y, mo, d, h, mi, tz) {
+  const guess = Date.UTC(y, mo - 1, d, h, mi);
+  const off1 = tzOffsetMs(new Date(guess), tz);
+  let t = guess - off1;
+  const off2 = tzOffsetMs(new Date(t), tz);
+  if (off2 !== off1) t = guess - off2;
+  return new Date(t);
+}
+const icsStamp = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+const icsEscape = s => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+function fold(line) {
+  if (line.length <= 75) return line;
+  let out = "", rest = line;
+  out += rest.slice(0, 75) + "\r\n"; rest = rest.slice(75);
+  while (rest.length > 74) { out += " " + rest.slice(0, 74) + "\r\n"; rest = rest.slice(74); }
+  return out + " " + rest;
+}
+
+function slotsFor(m, p) {
+  const [bf, ln, dn, bd, wk] = [p.bfast, p.lunch, p.dinner, p.bed, p.wake];
+  if (m.bedtime) return [bd];
+  if (m.perDay === 1) return [m.dinner ? dn : bf];
+  if (m.perDay === 2) return [bf, dn];
+  if (m.perDay === 3) return [bf, ln, dn];
+  if (m.perDay === 4) return ["06:00", "12:00", "18:00", "22:00"];
+  return [wk];
+}
+
+function buildIcs() {
+  const p = {
+    startDate: $("startDate").value, wake: $("wake").value, bfast: $("bfast").value, lunch: $("lunch").value,
+    dinner: $("dinner").value, bed: $("bed").value, lead: +$("lead").value, tz: $("tz").value,
+    ongoing: +$("ongoingDays").value || 14
+  };
+  const [y, mo, d] = p.startDate.split("-").map(Number);
+  const now = icsStamp(new Date());
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//AfterCare Prototype//Medication Schedule//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+    "X-WR-CALNAME:Medication Schedule", "X-PUBLISHED-TTL:PT1H", "REFRESH-INTERVAL;VALUE=DURATION:PT1H"];
+  const scheduled = [];
+  meds.filter(m => m.include && m.confirmed !== false && statusOf(m).schedulable).forEach(m => {
+    const days = m.days || p.ongoing;
+    const slots = slotsFor(m, p);
+    slots.forEach((hhmm, si) => {
+      const [h, mi] = hhmm.split(":").map(Number);
+      const start = zonedToUtc(y, mo, d, h, mi, p.tz);
+      const end = new Date(start.getTime() + 5 * 60000);
+      const summary = `Take ${m.name} ${m.dose}`;
+      const note = [m.withFood ? "Take with food." : "", m.days ? `Course: ${m.days} days.` : "Ongoing: confirm length with provider.", "Not medical advice; confirm with your provider or pharmacist."].filter(Boolean).join(" ");
+      lines.push("BEGIN:VEVENT",
+        `UID:${m.id}-slot${si + 1}@aftercare-calendar`,
+        `DTSTAMP:${now}`,
+        `DTSTART:${icsStamp(start)}`,
+        `DTEND:${icsStamp(end)}`,
+        `RRULE:FREQ=DAILY;COUNT=${days}`,
+        "SEQUENCE:0",
+        `SUMMARY:${icsEscape(summary)}`,
+        `DESCRIPTION:${icsEscape(note)}`,
+        "CATEGORIES:MEDICATION",
+        "BEGIN:VALARM", `TRIGGER:-PT${p.lead}M`, "ACTION:DISPLAY", `DESCRIPTION:${icsEscape("Time for " + m.name)}`, "END:VALARM",
+        "END:VEVENT");
+      scheduled.push({ name: m.name, dose: m.dose, when: start, tz: p.tz, lead: p.lead, withFood: m.withFood, days });
+    });
+  });
+  lines.push("END:VCALENDAR");
+  icsText = lines.map(fold).join("\r\n") + "\r\n";
+  return scheduled;
+}
+
+// ---------- Flow control ----------
+const STEP_IDS = ["s1", "s2", "s3", "s4"];
+function show(n) {
+  STEP_IDS.forEach((id, i) => $(id).classList.toggle("hidden", i !== n - 1));
+  document.querySelectorAll("#steps .step").forEach((el, i) => el.classList.toggle("on", i === n - 1));
+  window.scrollTo(0, 0);
+}
+
+$("loadSample").onclick = () => { $("docText").value = SAMPLE; };
+
+$("extract").onclick = () => {
+  const text = $("docText").value.trim();
+  if (!text) { $("extractMsg").textContent = "Paste or load a document first."; return; }
+  meds = extract(text);
+  if (!meds.length) { $("extractMsg").textContent = "No medications recognized. Check that the text includes doses in mg or mL."; return; }
+  $("extractMsg").textContent = "";
+  $("startDate").value = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+  renderReview(); show(2);
+};
+
+$("backTo1").onclick = () => show(1);
+$("toPrefs").onclick = () => {
+  const blocked = meds.filter(m => m.include && statusOf(m).schedulable && !m.confirmed);
+  if (blocked.length) { alert(`Please check and confirm: ${blocked.map(m => m.name).join(", ")}`); return; }
+  show(3);
+};
+$("backTo2").onclick = () => show(2);
+
+$("generate").onclick = () => {
+  const scheduled = buildIcs();
+  if (!scheduled.length) { $("genMsg").textContent = "Nothing to schedule yet. Confirm at least one medication on the review step."; return; }
+  $("genMsg").textContent = "";
+  const first = scheduled.slice().sort((a, b) => a.when - b.when).slice(0, 8);
+  $("preview").innerHTML = first.map(s => {
+    const local = s.when.toLocaleString("en-US", { timeZone: s.tz, weekday: "short", hour: "numeric", minute: "2-digit" });
+    return `<li>${local}: ${esc(s.name)} ${esc(s.dose)}${s.withFood ? " (with food)" : ""}</li>`;
+  }).join("");
+  const notSched = meds.filter(m => m.include && !statusOf(m).schedulable || m.include && m.prn || m.include && m.taper);
+  $("notScheduled").textContent = notSched.length
+    ? `Not on the calendar, needs your provider's review: ${notSched.map(m => m.name).join(", ")}.`
+    : "All medications are on the calendar.";
+  const token = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+  $("feedUrl").textContent = `webcal://[your-domain]/feeds/${token}.ics`;
+  show(4);
+};
+
+$("download").onclick = () => {
+  const blob = new Blob([icsText], { type: "text/calendar;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "medication-schedule.ics";
+  document.body.appendChild(a); a.click(); a.remove();
+};
+
+$("restart").onclick = () => { meds = []; icsText = ""; $("docText").value = ""; show(1); };
+</script>
+</body>
+</html>
