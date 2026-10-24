@@ -5,48 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>After-Care Calendar: Prototype</title>
 <style>
-  :root { --ink:#1b1f24; --muted:#5b6470; --line:#d6dbe1; --bg:#f6f8fa; --card:#ffffff;
-          --accent:#0b5cad; --ok:#1e7b3a; --warn:#9a5b00; --bad:#a1262d; --ok-bg:#e7f5ec; --warn-bg:#fff4df; --bad-bg:#fbe9ea; }
+  :root { --ink:#1b1f24; --muted:#4a525c; --line:#c9d0d8; --bg:#f6f8fa; --card:#ffffff;
+          --accent:#0b5cad; --accent-bg:#e6f0fa; --ok:#1e7b3a; --warn:#7a4800; --bad:#a1262d; --ok-bg:#e7f5ec; --warn-bg:#fff4df; --bad-bg:#fbe9ea; }
   * { box-sizing: border-box; }
-  body { margin:0; font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
+  body { margin:0; font: 20px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
   header { background:var(--ink); color:#fff; padding:16px 20px; }
-  header h1 { margin:0; font-size:22px; font-weight:650; }
-  header p { margin:4px 0 0; color:#c9d1da; font-size:15px; }
-  main { max-width: 980px; margin: 0 auto; padding: 20px; }
-  .disclaimer { background:#fff8e6; border:1px solid #e8c766; padding:12px 16px; border-radius:8px; font-size:16px; margin-bottom:16px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; margin-bottom:18px; }
-  h2 { font-size:21px; margin:0 0 10px; }
-  h3 { font-size:18px; margin:14px 0 6px; }
-  textarea { width:100%; min-height:180px; font: 16px/1.45 ui-monospace, Menlo, Consolas, monospace; padding:12px; border:1px solid var(--line); border-radius:8px; }
-  button { font: inherit; font-size:18px; padding:10px 18px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; margin:4px 6px 4px 0; }
+  header h1 { margin:0; font-size:24px; font-weight:650; }
+  header p { margin:4px 0 0; color:#c9d1da; font-size:16px; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+  .disclaimer { background:#fff8e6; border:1px solid #e8c766; padding:12px 16px; border-radius:8px; font-size:17px; margin-bottom:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px 20px; margin-bottom:18px; }
+  h2 { font-size:26px; margin:0 0 12px; line-height:1.3; }
+  h3 { font-size:21px; margin:18px 0 8px; }
+  textarea { width:100%; min-height:180px; font: 17px/1.45 ui-monospace, Menlo, Consolas, monospace; padding:12px; border:1px solid var(--line); border-radius:8px; }
+  button { font: inherit; font-size:20px; min-height:56px; padding:10px 22px; border-radius:10px; border:2px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; margin:6px 8px 6px 0; }
   button.secondary { background:#fff; color:var(--accent); }
   button:disabled { opacity:.45; cursor:not-allowed; }
-  input, select { font: inherit; font-size:17px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  button:focus-visible, .filebtn:focus-within { outline:3px solid var(--ink); outline-offset:2px; }
+  input, select { font: inherit; font-size:20px; padding:10px 12px; border:2px solid var(--line); border-radius:8px; background:#fff; }
   label { display:inline-block; margin:6px 16px 6px 0; }
-  table { width:100%; border-collapse:collapse; font-size:16px; }
-  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
-  th { font-size:15px; color:var(--muted); font-weight:600; }
-  .badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:14px; font-weight:600; }
-  .b-ok { background:var(--ok-bg); color:var(--ok); }
-  .b-warn { background:var(--warn-bg); color:var(--warn); }
-  .b-bad { background:var(--bad-bg); color:var(--bad); }
-  .snippet { color:var(--muted); font-size:14px; font-style:italic; }
-  .prefs { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:10px 18px; }
-  .prefs label { display:flex; flex-direction:column; margin:0; font-size:16px; color:var(--muted); }
   .steps { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
-  .step { padding:6px 12px; border-radius:999px; background:#e3e8ee; color:var(--muted); font-size:15px; }
-  .step.on { background:var(--accent); color:#fff; }
-  .feed { font-family: ui-monospace, Menlo, Consolas, monospace; background:#f1f4f7; padding:10px 12px; border-radius:6px; word-break:break-all; font-size:15px; }
-  .muted { color:var(--muted); font-size:16px; }
-  .hidden { display:none; }
-  ul.events { padding-left:20px; }
-  ul.events li { margin:4px 0; }
-  .note { font-size:15px; color:var(--muted); }
+  .step { padding:6px 14px; border-radius:999px; background:#e3e8ee; color:var(--muted); font-size:17px; }
+  .step.on { background:var(--accent); color:#fff; font-weight:600; }
+  .feed { font-family: ui-monospace, Menlo, Consolas, monospace; background:#f1f4f7; padding:10px 12px; border-radius:6px; word-break:break-all; font-size:16px; }
+  .muted { color:var(--muted); font-size:18px; }
+  .count { color:var(--muted); font-size:18px; font-weight:600; margin:0 0 6px; }
+  .hidden { display:none !important; }
+  .note { font-size:17px; color:var(--muted); }
   .upload { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; margin-bottom:10px; }
-  .filebtn { font-size:18px; padding:10px 18px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; margin:4px 6px 4px 0; }
-  .filebtn:focus-within { outline:2px solid var(--accent); outline-offset:2px; }
+  .filebtn { display:inline-flex; align-items:center; min-height:56px; font-size:20px; padding:10px 22px; border-radius:10px; border:2px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; margin:6px 8px 6px 0; }
   .filebtn input { position:absolute; width:1px; height:1px; opacity:0; }
   .photo { max-width:100%; max-height:420px; border:1px solid var(--line); border-radius:8px; display:block; margin:6px 0; }
+  details summary { cursor:pointer; color:var(--accent); font-size:18px; padding:8px 0; }
+  /* Medicine check card */
+  .medname { font-size:28px; font-weight:700; margin:0; }
+  .facts { list-style:none; padding:0; margin:12px 0; font-size:22px; }
+  .facts li { padding:6px 0; border-bottom:1px solid #edf0f3; }
+  .facts li:last-child { border-bottom:0; }
+  .source { margin:14px 0; }
+  .source .label { font-size:17px; color:var(--muted); margin-bottom:4px; }
+  .crop { display:block; max-width:100%; height:auto; border:2px solid var(--line); border-radius:6px; background:#fff; }
+  .quote { font: 18px/1.4 ui-monospace, Menlo, Consolas, monospace; background:#f1f4f7; padding:10px 12px; border-radius:6px; }
+  .callout { border-radius:8px; padding:12px 14px; margin:12px 0; font-size:19px; }
+  .callout.warn { background:var(--warn-bg); color:var(--warn); }
+  .callout.info { background:var(--accent-bg); color:#0a3f75; }
+  .ask { font-size:22px; font-weight:600; margin:18px 0 4px; }
+  .actions button { width:100%; }
+  @media (min-width:560px) { .actions button { width:auto; } }
+  .fix label { display:block; margin:14px 0 4px; font-weight:600; }
+  /* Time choices */
+  .choices { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin:14px 0; }
+  .choices button { margin:0; background:#fff; color:var(--ink); border-color:var(--line); }
+  .choices button.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; }
+  .nav { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:20px; }
+  .nav button { margin:0; }
+  .more { margin-top:18px; }
+  .more label { display:block; margin:10px 0; font-size:18px; }
+  /* Daily plan */
+  .slot { border:2px solid var(--line); border-radius:10px; padding:12px 16px; margin:12px 0; }
+  .slot .time { font-size:24px; font-weight:700; }
+  .slot .when { color:var(--muted); font-size:18px; margin-left:6px; }
+  .slot ul { margin:8px 0 0; padding-left:22px; }
+  .slot li { margin:6px 0; font-size:21px; }
+  .slot .detail { display:block; color:var(--muted); font-size:17px; }
+  .offlist li { margin:8px 0; }
+  button.big { width:100%; font-size:22px; min-height:64px; margin:16px 0 4px; }
 </style>
 </head>
 <body>
@@ -56,19 +79,19 @@
 </header>
 <main>
 
-<div class="disclaimer">This calendar is generated from your prescription document and is for reminder purposes only. It is not medical advice. Always follow your provider's and pharmacist's instructions.</div>
+<div class="disclaimer">This calendar is made from your prescription paper and is only for reminders. It is not medical advice. Always follow your doctor's and pharmacist's instructions.</div>
 
 <div class="steps" id="steps">
-  <span class="step on" data-step="1">1. Upload</span>
-  <span class="step" data-step="2">2. Review</span>
-  <span class="step" data-step="3">3. Preferences</span>
-  <span class="step" data-step="4">4. Download</span>
+  <span class="step on">1. Your paper</span>
+  <span class="step">2. Check medicines</span>
+  <span class="step">3. Your times</span>
+  <span class="step">4. Your plan</span>
 </div>
 
 <!-- STEP 1: UPLOAD -->
 <section id="s1" class="card">
-  <h2>Upload a discharge prescription</h2>
-  <p class="muted">Take or upload a photo of your discharge sheet, or paste its text. Photos are read on this device; check the text it finds before extracting. PDF upload is on the roadmap.</p>
+  <h2>Add your discharge paper</h2>
+  <p class="muted">Take or upload a photo of your discharge sheet, or paste its text. Photos are read on this device; check the text it finds before going on. PDF upload is on the roadmap.</p>
   <div class="upload">
     <label class="filebtn">Upload photo<input type="file" id="photoInput" accept="image/*"></label>
     <button class="secondary" id="loadSamplePhoto">Use sample photo</button>
@@ -81,78 +104,58 @@
   <textarea id="docText" aria-label="Prescription text"></textarea>
   <div>
     <button class="secondary" id="loadSample">Load sample text</button>
-    <button id="extract">Extract medications</button>
+    <button id="extract">Next: check my medicines</button>
   </div>
   <p class="note" id="extractMsg"></p>
 </section>
 
-<!-- STEP 2: REVIEW -->
-<section id="s2" class="card hidden">
-  <h2>Review extracted medications</h2>
-  <p class="muted">Check every item against the original document. Items flagged for review cannot be scheduled until you confirm them.</p>
-  <div style="overflow-x:auto">
-  <table>
-    <thead><tr><th>Use</th><th>Medication</th><th>Dose</th><th>Times/day</th><th>Days</th><th>Confidence</th><th>Status</th></tr></thead>
-    <tbody id="medRows"></tbody>
-  </table>
-  </div>
-  <p class="snippet" id="sourceNote"></p>
-  <details id="reviewPhotoWrap" class="hidden">
-    <summary class="muted">Show original photo</summary>
-    <img id="reviewPhoto" class="photo" alt="Original discharge document">
-  </details>
-  <div>
-    <button class="secondary" id="backTo1">Back</button>
-    <button id="toPrefs">Continue to preferences</button>
-  </div>
+<!-- STEP 2: CHECK EACH MEDICINE, ONE AT A TIME -->
+<section id="s2" class="card hidden" aria-live="polite">
+  <p class="count" id="medCount"></p>
+  <div id="medCard"></div>
 </section>
 
-<!-- STEP 3: PREFERENCES -->
+<!-- STEP 3: TIMES, ONE QUESTION AT A TIME -->
 <section id="s3" class="card hidden">
-  <h2>Set your daily times</h2>
-  <p class="muted">These times are used to place doses. Doses that say "with food" line up with the nearest meal.</p>
-  <div class="prefs">
-    <label>Start date <input type="date" id="startDate"></label>
-    <label>Wake time <input type="time" id="wake" value="07:00"></label>
-    <label>Breakfast <input type="time" id="bfast" value="08:00"></label>
-    <label>Lunch <input type="time" id="lunch" value="12:30"></label>
-    <label>Dinner <input type="time" id="dinner" value="18:30"></label>
-    <label>Bedtime <input type="time" id="bed" value="22:00"></label>
-    <label>Reminder lead time
-      <select id="lead"><option value="0">At dose time</option><option value="5">5 min before</option><option value="10" selected>10 min before</option><option value="30">30 min before</option></select>
+  <p class="count" id="qCount"></p>
+  <h2 id="qTitle"></h2>
+  <p class="muted" id="qHelp"></p>
+  <div class="choices" id="qChoices"></div>
+  <div id="qOtherWrap" class="hidden"><label>Other time <input type="time" id="qOther"></label></div>
+  <details class="more hidden" id="moreOptions">
+    <summary>More options</summary>
+    <label>Remind me
+      <select id="lead"><option value="0">At the time</option><option value="5">5 minutes early</option><option value="10" selected>10 minutes early</option><option value="30">30 minutes early</option></select>
     </label>
-    <label>Time zone
-      <select id="tz">
-        <option value="America/Los_Angeles" selected>Pacific (Los Angeles)</option>
-        <option value="America/Denver">Mountain (Denver)</option>
-        <option value="America/Chicago">Central (Chicago)</option>
-        <option value="America/New_York">Eastern (New York)</option>
-      </select>
+    <label>If the paper gives no end date, remind me for
+      <select id="ongoingDays"><option value="7">1 week</option><option value="14" selected>2 weeks</option><option value="30">30 days</option></select>
     </label>
-    <label>Days for ongoing meds <input type="number" id="ongoingDays" value="14" min="1" max="90"></label>
+    <label>Time zone <select id="tz"></select></label>
+  </details>
+  <div class="nav">
+    <button class="secondary" id="qBack">Back</button>
+    <button id="qNext">Next</button>
   </div>
-  <div style="margin-top:14px">
-    <button class="secondary" id="backTo2">Back</button>
-    <button id="generate">Build calendar</button>
-  </div>
-  <p class="note" id="genMsg"></p>
 </section>
 
-<!-- STEP 4: DOWNLOAD -->
+<!-- STEP 4: DAILY PLAN + DOWNLOAD -->
 <section id="s4" class="card hidden">
-  <h2>Your calendar is ready</h2>
-  <h3>Upcoming doses (first day)</h3>
-  <ul class="events" id="preview"></ul>
-  <p class="muted" id="notScheduled"></p>
-
-  <h3>Subscribe once (recommended)</h3>
-  <p class="muted">Add this link in Google Calendar (Other calendars, From URL), Apple Calendar (Add Subscription), or Outlook (Add calendar, Subscribe from web). Changes show up on refresh; Outlook can take up to 24 hours.</p>
-  <div class="feed" id="feedUrl"></div>
-  <p class="note">In the full product, this link is served by the backend. In this prototype it is a placeholder, so use the download below.</p>
-
-  <h3>Download the file</h3>
-  <button id="download">Download calendar (.ics)</button>
-  <button class="secondary" id="restart">Start over</button>
+  <h2>Here's your daily plan</h2>
+  <p class="muted" id="planStart"></p>
+  <div id="plan"></div>
+  <div id="notScheduled"></div>
+  <button class="big" id="download">Download my calendar</button>
+  <p class="note">Then open the downloaded file to add the reminders to your phone or computer calendar.</p>
+  <div class="nav">
+    <button class="secondary" id="changeTimes">Change my times</button>
+    <button class="secondary" id="restart">Start over</button>
+  </div>
+  <details class="more">
+    <summary>Other ways to add it</summary>
+    <p class="note">Subscribe once: add this link in Google Calendar (Other calendars, From URL), Apple Calendar (Add Subscription), or Outlook (Add calendar, Subscribe from web). Changes show up on refresh; Outlook can take up to 24 hours.</p>
+    <div class="feed" id="feedUrl"></div>
+    <p class="note">In the full product, this link is served by the backend. In this prototype it is a placeholder, so use the download above.</p>
+  </details>
 </section>
 
 </main>
@@ -169,6 +172,10 @@ const SAMPLE = `DISCHARGE PRESCRIPTIONS (SYNTHETIC)
 // ---------- State ----------
 let meds = [];     // extracted + reviewed records
 let icsText = "";  // generated calendar text
+let ocrLines = []; // lines read from the photo: { text, bbox, conf }
+let reviewIndex = 0, cardMode = "ask";
+let questions = [], qIndex = 0;
+const prefs = { wake: "07:00", bfast: "08:00", lunch: "12:30", dinner: "18:30", bed: "22:00", startDate: "" };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -227,48 +234,246 @@ function parseLine(raw, idx) {
 }
 
 function extract(text) {
-  // Rejoin wrapped lines: a line starting lowercase continues the one above (common in photos of printed sheets)
+  // Rejoin wrapped lines: a line starting lowercase continues the one above (common in photos of printed sheets).
+  // Keep the original pieces so each medicine can be matched back to its lines in the photo.
   const joined = text.split(/\n/).reduce((acc, l) => {
-    if (acc.length && /^\s*[a-z]/.test(l)) acc[acc.length - 1] += " " + l.trim(); else acc.push(l);
+    const last = acc[acc.length - 1];
+    if (last && /^\s*[a-z]/.test(l)) { last.text += " " + l.trim(); last.parts.push(l.trim()); }
+    else acc.push({ text: l, parts: [l.trim()] });
     return acc;
   }, []);
-  return joined.map((l, i) => /^\s*\d+\./.test(l) || /\b(mg|mcg|mL)\b/i.test(l) ? parseLine(l, i) : null).filter(Boolean);
+  return joined.map((j, i) => {
+    if (!/^\s*\d+\./.test(j.text) && !/\b(mg|mcg|mL)\b/i.test(j.text)) return null;
+    const rec = parseLine(j.text, i);
+    if (rec) rec.parts = j.parts;
+    return rec;
+  }).filter(Boolean);
 }
 
 function statusOf(m) {
-  if (m.taper) return { cls: "b-warn", label: "Taper: review required, not scheduled", schedulable: false };
-  if (m.prn) return { cls: "b-warn", label: "As needed: listed, not scheduled", schedulable: false };
-  if (!m.perDay) return { cls: "b-bad", label: "Frequency unclear: flagged", schedulable: false };
-  if (m.confidence < 0.8) return { cls: "b-warn", label: "Check: low confidence", schedulable: true };
-  if (!m.days) return { cls: "b-warn", label: "Ongoing: confirm with provider", schedulable: true };
-  return { cls: "b-ok", label: "Ready", schedulable: true };
+  if (m.taper) return { schedulable: false, reason: "the dose changes over time. Ask your pharmacist for a schedule." };
+  if (m.prn) return { schedulable: false, reason: "only take it when you need it." };
+  if (!m.perDay) return { schedulable: false, reason: "we couldn't tell how often to take it." };
+  return { schedulable: true };
 }
 
-// ---------- Review screen ----------
-function renderReview() {
-  const rows = meds.map((m, i) => {
-    const st = statusOf(m);
-    const days = m.taper ? m.phases.map(p => `${p.dose} x ${p.days ?? "?"}d`).join(" → ") : (m.days ? m.days : "Ongoing");
-    const times = m.perDay ? m.perDay : "-";
-    return `<tr>
-      <td><input type="checkbox" data-i="${i}" data-k="include" ${m.include ? "checked" : ""}></td>
-      <td><strong>${esc(m.name)}</strong><div class="snippet">"${esc(m.source)}"</div></td>
-      <td>${esc(m.dose)}</td>
-      <td>${times}<div class="snippet">${esc(m.frequency)}</div></td>
-      <td>${esc(days)}</td>
-      <td>${Math.round(m.confidence*100)}%</td>
-      <td><span class="badge ${st.cls}">${st.label}</span>
-          ${st.schedulable && m.include ? `<div><label><input type="checkbox" data-i="${i}" data-k="confirmed" ${m.confirmed ? "checked":""}> I checked this</label></div>` : ""}
-      </td></tr>`;
-  }).join("");
-  $("medRows").innerHTML = rows || `<tr><td colspan="7">No medications found. Check the pasted text.</td></tr>`;
-  $("sourceNote").textContent = "Each row shows the exact line from your document. Confirm each schedulable item before building the calendar.";
-  document.querySelectorAll("#medRows input").forEach(el => el.addEventListener("change", e => {
-    const m = meds[+e.target.dataset.i];
-    m[e.target.dataset.k] = e.target.checked;
-    if (e.target.dataset.k === "include") renderReview();
-  }));
+// ---------- Plain-language wording ----------
+function howOften(m) {
+  if (m.bedtime) return "Once a day, at bedtime";
+  if (/^every/.test(m.frequency)) return `Every ${m.frequency.slice(6)} (${m.perDay} times a day)`;
+  if (m.perDay === 1) return m.dinner ? "Once a day, with dinner" : "Once a day";
+  return `${m.perDay} times a day`;
 }
+function fmtTime(hhmm) {
+  const [h, mi] = hhmm.split(":").map(Number);
+  return `${(h + 11) % 12 + 1}:${String(mi).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+}
+const ongoingLabel = () => $("ongoingDays").selectedOptions[0].text;
+
+// ---------- Step 2: check one medicine at a time ----------
+function ocrLinesFor(m) {
+  return ocrLines.length && m.parts ? ocrLines.filter(l => m.parts.includes(l.text)) : [];
+}
+
+function drawCrop(canvas, lines) {
+  const img = $("photoPreview");
+  const draw = () => {
+    const padX = 10, padY = 5; // small vertical pad so neighbouring lines don't creep in
+    const x0 = Math.max(0, Math.min(...lines.map(l => l.bbox.x0)) - padX);
+    const y0 = Math.max(0, Math.min(...lines.map(l => l.bbox.y0)) - padY);
+    const x1 = Math.min(img.naturalWidth, Math.max(...lines.map(l => l.bbox.x1)) + padX);
+    const y1 = Math.min(img.naturalHeight, Math.max(...lines.map(l => l.bbox.y1)) + padY);
+    canvas.width = x1 - x0; canvas.height = y1 - y0;
+    canvas.getContext("2d").drawImage(img, x0, y0, x1 - x0, y1 - y0, 0, 0, x1 - x0, y1 - y0);
+  };
+  if (img.complete && img.naturalWidth) draw(); else img.addEventListener("load", draw, { once: true });
+}
+
+function renderCard() {
+  const m = meds[reviewIndex];
+  const st = statusOf(m);
+  const lines = ocrLinesFor(m);
+  $("medCount").textContent = `Medicine ${reviewIndex + 1} of ${meds.length}`;
+
+  const source = lines.length
+    ? `<div class="source"><div class="label">From your photo:</div><canvas class="crop" id="crop" role="img" aria-label="${esc(m.source)}"></canvas>
+       <details><summary>See the whole photo</summary><img class="photo" src="${photoUrl}" alt="Your discharge paper"></details></div>`
+    : `<div class="source"><div class="label">From your paper:</div><div class="quote">${esc(m.source)}</div></div>`;
+  const hardToRead = lines.some(l => l.conf < 85)
+    ? `<div class="callout warn">Some words were hard to read in your photo. Please compare carefully with your paper.</div>` : "";
+
+  let facts, notes = "", actions;
+  if (m.taper) {
+    facts = m.phases.map(p => `<li>${esc(p.dose)} a day for ${p.days ?? "?"} days</li>`).join("");
+    notes = `<div class="callout info">This dose changes over time, so we won't add it to your calendar. Ask your pharmacist for a day-by-day schedule.</div>`;
+    actions = `<button id="okNext">OK, next</button>`;
+  } else if (m.prn) {
+    facts = `<li>${esc(m.dose)}</li><li>Only when you need it${/pain/i.test(m.source) ? " (for pain)" : ""}</li>`;
+    notes = `<div class="callout info">You take this only when you need it, so we won't send reminders for it.</div>`;
+    actions = `<button id="okNext">OK, next</button>`;
+  } else if (!st.schedulable) {
+    facts = `<li>${esc(m.dose)}</li>`;
+    notes = `<div class="callout warn">We couldn't tell how often to take this.</div>`;
+    actions = `<button id="fixIt">Fix it</button><button class="secondary" id="leaveOff">Leave it off my calendar</button>`;
+  } else {
+    facts = [esc(m.dose), howOften(m), m.withFood ? "With food" : "", m.days ? `For ${m.days} days` : "No end date on the paper"]
+      .filter(Boolean).map(f => `<li>${f}</li>`).join("");
+    if (!m.days) notes = `<div class="callout warn">Your paper doesn't say how many days to take this. We'll remind you for ${ongoingLabel()}. Ask your pharmacist how long to keep taking it.</div>`;
+    actions = cardMode === "wrong"
+      ? `<p class="ask">What would you like to do?</p><button id="fixIt">Fix it</button><button class="secondary" id="leaveOff">Leave it off my calendar</button>`
+      : `<p class="ask">Does this match your paper?</p><button id="yes">Yes, this is right</button><button class="secondary" id="no">No, something's wrong</button>`;
+  }
+
+  if (cardMode === "fix") actions = fixForm(m);
+
+  $("medCard").innerHTML = `
+    <h2 class="medname">${esc(m.name)}</h2>
+    <ul class="facts">${facts}</ul>
+    ${source}${hardToRead}${notes}
+    <div class="actions">${actions}</div>
+    <div class="nav"><button class="secondary" id="cardBack">Back</button></div>`;
+
+  if (lines.length) drawCrop($("crop"), lines);
+  const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+  on("okNext", nextMed);
+  on("yes", () => { m.include = true; m.confirmed = true; nextMed(); });
+  on("no", () => { cardMode = "wrong"; renderCard(); });
+  on("fixIt", () => { cardMode = "fix"; renderCard(); });
+  on("leaveOff", () => { m.include = false; m.confirmed = false; nextMed(); });
+  on("cardBack", prevMed);
+  if (cardMode === "fix") wireFixForm(m);
+}
+
+function fixForm(m) {
+  const per = m.perDay || 1;
+  return `<div class="fix">
+    <label for="fxDose">Dose</label><input id="fxDose" value="${esc(m.dose)}">
+    <label>How many times a day?</label>
+    <div class="choices" id="fxPer">${[1, 2, 3, 4].map(n => `<button type="button" data-v="${n}" class="${n === per ? "on" : ""}">${n}</button>`).join("")}</div>
+    <label>Take with food?</label>
+    <div class="choices" id="fxFood"><button type="button" data-v="1" class="${m.withFood ? "on" : ""}">Yes</button><button type="button" data-v="0" class="${m.withFood ? "" : "on"}">No</button></div>
+    <label for="fxDays">How many days? <span class="note">(leave empty if no end date)</span></label>
+    <input id="fxDays" type="number" min="1" max="365" inputmode="numeric" value="${m.days ?? ""}">
+    <div><button id="fxSave">Save</button><button class="secondary" id="fxCancel">Cancel</button></div>
+  </div>`;
+}
+
+function wireFixForm(m) {
+  const pick = group => group.querySelectorAll("button").forEach(b => b.onclick = () => {
+    group.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+  });
+  pick($("fxPer")); pick($("fxFood"));
+  $("fxCancel").onclick = () => { cardMode = "ask"; renderCard(); };
+  $("fxSave").onclick = () => {
+    const per = +$("fxPer").querySelector(".on").dataset.v;
+    if (per !== m.perDay) { m.bedtime = false; m.dinner = false; }
+    Object.assign(m, {
+      dose: $("fxDose").value.trim() || m.dose,
+      perDay: per,
+      frequency: per === 1 ? "once daily" : `${per} times daily`,
+      withFood: $("fxFood").querySelector(".on").dataset.v === "1",
+      days: +$("fxDays").value || null,
+      prn: false, confidence: 1, edited: true, include: true, confirmed: true
+    });
+    nextMed();
+  };
+}
+
+function nextMed() {
+  cardMode = "ask";
+  if (reviewIndex < meds.length - 1) { reviewIndex++; renderCard(); window.scrollTo(0, 0); }
+  else startQuestions();
+}
+function prevMed() {
+  cardMode = "ask";
+  if (reviewIndex > 0) { reviewIndex--; renderCard(); window.scrollTo(0, 0); }
+  else show(1);
+}
+
+// ---------- Step 3: only ask for the times the medicines need ----------
+const SLOT_ORDER = ["wake", "bfast", "lunch", "dinner", "bed"];
+const SLOT_LABEL = { wake: "When you wake up", bfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", bed: "Bedtime" };
+const TIME_Q = {
+  wake:   { title: "What time do you usually wake up?",       opts: ["06:00", "06:30", "07:00", "07:30", "08:00", "08:30"] },
+  bfast:  { title: "What time do you usually eat breakfast?", opts: ["07:00", "07:30", "08:00", "08:30", "09:00", "09:30"] },
+  lunch:  { title: "What time do you usually eat lunch?",     opts: ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00"] },
+  dinner: { title: "What time do you usually eat dinner?",    opts: ["17:00", "17:30", "18:00", "18:30", "19:00", "19:30"] },
+  bed:    { title: "What time do you usually go to bed?",     opts: ["21:00", "21:30", "22:00", "22:30", "23:00", "23:30"] }
+};
+
+// Slot keys (or fixed HH:MM times) each dose lines up with
+function slotsFor(m) {
+  if (m.bedtime) return ["bed"];
+  if (m.perDay === 1) return [m.dinner ? "dinner" : "bfast"];
+  if (m.perDay === 2) return ["bfast", "dinner"];
+  if (m.perDay === 3) return ["bfast", "lunch", "dinner"];
+  if (m.perDay === 4) return ["06:00", "12:00", "18:00", "22:00"];
+  return ["wake"];
+}
+const scheduledMeds = () => meds.filter(m => m.include && m.confirmed && statusOf(m).schedulable);
+
+function startQuestions() {
+  const used = new Set(scheduledMeds().flatMap(slotsFor));
+  questions = [...SLOT_ORDER.filter(k => used.has(k)), "start"];
+  qIndex = 0;
+  renderQuestion(); show(3);
+}
+
+function renderQuestion() {
+  const key = questions[qIndex];
+  $("qCount").textContent = `Question ${qIndex + 1} of ${questions.length}`;
+  $("moreOptions").classList.toggle("hidden", key !== "start");
+  let opts, value, labelOf;
+  if (key === "start") {
+    const today = new Date(), tomorrow = new Date(Date.now() + 864e5);
+    const iso = d => d.toLocaleDateString("en-CA");
+    const day = d => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    $("qTitle").textContent = "When should your reminders start?";
+    $("qHelp").textContent = scheduledMeds().length ? "" : "None of your medicines will be on the calendar, so there's nothing to remind you about yet.";
+    opts = [iso(today), iso(tomorrow)];
+    labelOf = v => v === opts[0] ? `Today<br><span class="note">${day(today)}</span>` : `Tomorrow<br><span class="note">${day(tomorrow)}</span>`;
+    if (!opts.includes(prefs.startDate)) prefs.startDate = opts[0];
+    value = prefs.startDate;
+    $("qOtherWrap").classList.add("hidden");
+  } else {
+    const names = scheduledMeds().filter(m => slotsFor(m).includes(key)).map(m => m.name);
+    $("qTitle").textContent = TIME_Q[key].title;
+    $("qHelp").textContent = `We'll remind you then to take: ${names.join(", ")}.`;
+    opts = TIME_Q[key].opts;
+    labelOf = fmtTime;
+    value = prefs[key];
+    $("qOther").value = value;
+    $("qOtherWrap").classList.toggle("hidden", opts.includes(value));
+  }
+  const other = key === "start" ? "" : `<button type="button" data-other="1" class="${opts.includes(value) ? "" : "on"}">Other time</button>`;
+  $("qChoices").innerHTML = opts.map(v => `<button type="button" data-v="${v}" class="${v === value ? "on" : ""}">${labelOf(v)}</button>`).join("") + other;
+  $("qChoices").querySelectorAll("button").forEach(b => b.onclick = () => {
+    if (b.dataset.other) { $("qOtherWrap").classList.remove("hidden"); $("qOther").focus(); }
+    else if (key === "start") prefs.startDate = b.dataset.v;
+    else prefs[key] = b.dataset.v;
+    if (!b.dataset.other) renderQuestion();
+    else $("qChoices").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+  });
+  $("qNext").textContent = qIndex === questions.length - 1 ? "Show my plan" : "Next";
+}
+
+$("qOther").onchange = e => { if (e.target.value) prefs[questions[qIndex]] = e.target.value; };
+$("qNext").onclick = () => {
+  if (qIndex < questions.length - 1) { qIndex++; renderQuestion(); window.scrollTo(0, 0); }
+  else showPlan();
+};
+$("qBack").onclick = () => {
+  if (qIndex > 0) { qIndex--; renderQuestion(); }
+  else { reviewIndex = meds.length - 1; cardMode = "ask"; renderCard(); show(2); }
+};
+
+// Time zone: use the device's, keep a few US zones as alternatives
+(() => {
+  const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const zones = [["America/Los_Angeles", "Pacific (Los Angeles)"], ["America/Denver", "Mountain (Denver)"], ["America/Chicago", "Central (Chicago)"], ["America/New_York", "Eastern (New York)"]];
+  if (here && !zones.some(z => z[0] === here)) zones.unshift([here, here.replace(/_/g, " ")]);
+  $("tz").innerHTML = zones.map(([v, t]) => `<option value="${v}" ${v === here ? "selected" : ""}>${esc(t)}</option>`).join("");
+})();
 
 // ---------- ICS generation ----------
 function tzOffsetMs(date, tz) {
@@ -294,33 +499,19 @@ function fold(line) {
   return out + " " + rest;
 }
 
-function slotsFor(m, p) {
-  const [bf, ln, dn, bd, wk] = [p.bfast, p.lunch, p.dinner, p.bed, p.wake];
-  if (m.bedtime) return [bd];
-  if (m.perDay === 1) return [m.dinner ? dn : bf];
-  if (m.perDay === 2) return [bf, dn];
-  if (m.perDay === 3) return [bf, ln, dn];
-  if (m.perDay === 4) return ["06:00", "12:00", "18:00", "22:00"];
-  return [wk];
-}
-
 function buildIcs() {
-  const p = {
-    startDate: $("startDate").value, wake: $("wake").value, bfast: $("bfast").value, lunch: $("lunch").value,
-    dinner: $("dinner").value, bed: $("bed").value, lead: +$("lead").value, tz: $("tz").value,
-    ongoing: +$("ongoingDays").value || 14
-  };
-  const [y, mo, d] = p.startDate.split("-").map(Number);
+  const lead = +$("lead").value, tz = $("tz").value, ongoing = +$("ongoingDays").value || 14;
+  const [y, mo, d] = prefs.startDate.split("-").map(Number);
   const now = icsStamp(new Date());
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//AfterCare Prototype//Medication Schedule//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
     "X-WR-CALNAME:Medication Schedule", "X-PUBLISHED-TTL:PT1H", "REFRESH-INTERVAL;VALUE=DURATION:PT1H"];
   const scheduled = [];
-  meds.filter(m => m.include && m.confirmed !== false && statusOf(m).schedulable).forEach(m => {
-    const days = m.days || p.ongoing;
-    const slots = slotsFor(m, p);
-    slots.forEach((hhmm, si) => {
+  scheduledMeds().forEach(m => {
+    const days = m.days || ongoing;
+    slotsFor(m).forEach((slot, si) => {
+      const hhmm = prefs[slot] ?? slot;
       const [h, mi] = hhmm.split(":").map(Number);
-      const start = zonedToUtc(y, mo, d, h, mi, p.tz);
+      const start = zonedToUtc(y, mo, d, h, mi, tz);
       const end = new Date(start.getTime() + 5 * 60000);
       const summary = `Take ${m.name} ${m.dose}`;
       const note = [m.withFood ? "Take with food." : "", m.days ? `Course: ${m.days} days.` : "Ongoing: confirm length with provider.", "Not medical advice; confirm with your provider or pharmacist."].filter(Boolean).join(" ");
@@ -334,9 +525,9 @@ function buildIcs() {
         `SUMMARY:${icsEscape(summary)}`,
         `DESCRIPTION:${icsEscape(note)}`,
         "CATEGORIES:MEDICATION",
-        "BEGIN:VALARM", `TRIGGER:-PT${p.lead}M`, "ACTION:DISPLAY", `DESCRIPTION:${icsEscape("Time for " + m.name)}`, "END:VALARM",
+        "BEGIN:VALARM", `TRIGGER:-PT${lead}M`, "ACTION:DISPLAY", `DESCRIPTION:${icsEscape("Time for " + m.name)}`, "END:VALARM",
         "END:VEVENT");
-      scheduled.push({ name: m.name, dose: m.dose, when: start, tz: p.tz, lead: p.lead, withFood: m.withFood, days });
+      scheduled.push({ name: m.name, dose: m.dose, slot, hhmm, withFood: m.withFood, days, ongoing: !m.days });
     });
   });
   lines.push("END:VCALENDAR");
@@ -344,10 +535,39 @@ function buildIcs() {
   return scheduled;
 }
 
+// ---------- Step 4: plain-language daily plan ----------
+function showPlan() {
+  const scheduled = buildIcs();
+  const lead = +$("lead").value;
+  const start = new Date(prefs.startDate + "T12:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  $("planStart").textContent = scheduled.length
+    ? `Starting ${start}. Your calendar will remind you ${lead ? `${lead} minutes early` : "at the time"}.`
+    : "Nothing will be on your calendar yet.";
+
+  const bySlot = {};
+  scheduled.forEach(s => (bySlot[s.hhmm] ??= { slot: s.slot, items: [] }).items.push(s));
+  $("plan").innerHTML = Object.keys(bySlot).sort().map(hhmm => {
+    const { slot, items } = bySlot[hhmm];
+    return `<div class="slot">
+      <span class="time">${fmtTime(hhmm)}</span><span class="when">${esc(SLOT_LABEL[slot] ?? "")}</span>
+      <ul>${items.map(s => `<li>${esc(s.name)} ${esc(s.dose)}<span class="detail">${[s.withFood ? "With food" : "", s.ongoing ? `No end date on the paper, reminding you for ${ongoingLabel()}` : `For ${s.days} days`].filter(Boolean).join(" · ")}</span></li>`).join("")}</ul>
+    </div>`;
+  }).join("");
+
+  const off = meds.filter(m => m.include && !statusOf(m).schedulable).map(m => `<li><strong>${esc(m.name)}</strong>: ${statusOf(m).reason}</li>`)
+    .concat(meds.filter(m => !m.include).map(m => `<li><strong>${esc(m.name)}</strong>: you chose to leave it off.</li>`));
+  $("notScheduled").innerHTML = off.length ? `<h3>Not on your calendar</h3><ul class="offlist">${off.join("")}</ul>` : "";
+
+  $("download").disabled = !scheduled.length;
+  const token = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+  $("feedUrl").textContent = `webcal://[your-domain]/feeds/${token}.ics`;
+  show(4);
+}
+
 // ---------- Photo upload + OCR (in-browser Tesseract.js; production would send the image to the backend) ----------
 const SAMPLE_PHOTO = "samples/sample-discharge-photo.jpg";
 const TESSERACT_SRC = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
-let photoUrl = null;   // object URL of the current photo, shown again on the review step
+let photoUrl = null;   // object URL of the current photo, also used to crop each medicine's lines
 let tesseractLoading = null;
 
 function loadTesseract() {
@@ -364,9 +584,9 @@ function loadTesseract() {
 function setPhoto(blob) {
   if (photoUrl) URL.revokeObjectURL(photoUrl);
   photoUrl = blob ? URL.createObjectURL(blob) : null;
-  $("photoPreview").src = $("reviewPhoto").src = photoUrl || "";
+  ocrLines = [];
+  $("photoPreview").src = photoUrl || "";
   $("photoWrap").classList.toggle("hidden", !photoUrl);
-  $("reviewPhotoWrap").classList.toggle("hidden", !photoUrl);
 }
 
 async function readPhoto(blob) {
@@ -382,9 +602,10 @@ async function readPhoto(blob) {
       logger: m => { if (m.status === "recognizing text") $("ocrMsg").textContent = `Reading photo... ${Math.round(m.progress * 100)}%`; }
     });
     const text = data.text.trim();
+    ocrLines = data.lines.map(l => ({ text: l.text.trim(), bbox: l.bbox, conf: l.confidence }));
     $("docText").value = text;
     $("ocrMsg").textContent = text
-      ? `Read the photo (${Math.round(data.confidence)}% confidence). Check the text below against your document and fix any mistakes, then extract.`
+      ? `Read the photo (${Math.round(data.confidence)}% confidence). Check the text below against your document and fix any mistakes, then go on.`
       : "Couldn't find any text. Try a clearer, well-lit photo taken straight on.";
   } catch (err) {
     $("ocrMsg").textContent = err.message;
@@ -424,37 +645,13 @@ $("extract").onclick = () => {
   const text = $("docText").value.trim();
   if (!text) { $("extractMsg").textContent = "Upload a photo or paste the document text first."; return; }
   meds = extract(text);
-  if (!meds.length) { $("extractMsg").textContent = "No medications recognized. Check that the text includes doses in mg or mL."; return; }
+  if (!meds.length) { $("extractMsg").textContent = "No medicines recognized. Check that the text includes doses in mg or mL."; return; }
   $("extractMsg").textContent = "";
-  $("startDate").value = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
-  renderReview(); show(2);
+  reviewIndex = 0; cardMode = "ask";
+  renderCard(); show(2);
 };
 
-$("backTo1").onclick = () => show(1);
-$("toPrefs").onclick = () => {
-  const blocked = meds.filter(m => m.include && statusOf(m).schedulable && !m.confirmed);
-  if (blocked.length) { alert(`Please check and confirm: ${blocked.map(m => m.name).join(", ")}`); return; }
-  show(3);
-};
-$("backTo2").onclick = () => show(2);
-
-$("generate").onclick = () => {
-  const scheduled = buildIcs();
-  if (!scheduled.length) { $("genMsg").textContent = "Nothing to schedule yet. Confirm at least one medication on the review step."; return; }
-  $("genMsg").textContent = "";
-  const first = scheduled.slice().sort((a, b) => a.when - b.when).slice(0, 8);
-  $("preview").innerHTML = first.map(s => {
-    const local = s.when.toLocaleString("en-US", { timeZone: s.tz, weekday: "short", hour: "numeric", minute: "2-digit" });
-    return `<li>${local}: ${esc(s.name)} ${esc(s.dose)}${s.withFood ? " (with food)" : ""}</li>`;
-  }).join("");
-  const notSched = meds.filter(m => m.include && !statusOf(m).schedulable || m.include && m.prn || m.include && m.taper);
-  $("notScheduled").textContent = notSched.length
-    ? `Not on the calendar, needs your provider's review: ${notSched.map(m => m.name).join(", ")}.`
-    : "All medications are on the calendar.";
-  const token = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
-  $("feedUrl").textContent = `webcal://[your-domain]/feeds/${token}.ics`;
-  show(4);
-};
+$("changeTimes").onclick = () => { qIndex = 0; renderQuestion(); show(3); };
 
 $("download").onclick = () => {
   const blob = new Blob([icsText], { type: "text/calendar;charset=utf-8" });
