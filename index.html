@@ -144,7 +144,7 @@
   <h2>Here's your daily plan</h2>
   <p class="muted" id="planStart"></p>
   <div id="plan"></div>
-  <button class="big" id="addTasks">Add all to Google Tasks</button>
+  <button class="big" id="addTasks">Add to my calendar</button>
   <p class="note" id="tasksMsg" aria-live="polite"></p>
   <p class="note" id="tasksHelp"></p>
   <div id="notScheduled"></div>
@@ -566,10 +566,10 @@ function taskItems(scheduled) {
 
 function getToken() {
   return new Promise((resolve, reject) => {
-    if (!window.google?.accounts?.oauth2) return reject(new Error("Google sign-in didn't load. Check your internet connection and try again."));
+    if (!window.google?.accounts?.oauth2) return reject(new Error("Sign-in didn't load. Check your internet connection and try again."));
     tokenClient ??= google.accounts.oauth2.initTokenClient({ client_id: GOOGLE_CLIENT_ID, scope: "https://www.googleapis.com/auth/tasks", callback: () => {} });
-    tokenClient.callback = r => r.error ? reject(new Error("Google sign-in was cancelled.")) : resolve(r.access_token);
-    tokenClient.error_callback = () => reject(new Error("Google sign-in was cancelled."));
+    tokenClient.callback = r => r.error ? reject(new Error("Sign-in was cancelled.")) : resolve(r.access_token);
+    tokenClient.error_callback = () => reject(new Error("Sign-in was cancelled or blocked. Allow pop-ups and try again."));
     tokenClient.requestAccessToken();
   });
 }
@@ -579,27 +579,27 @@ async function tasksApi(token, path, body) {
     const res = await fetch(TASKS_API + path, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) return res.json();
     if ((res.status === 429 || res.status >= 500) && attempt < 3) { await new Promise(r => setTimeout(r, 1000 * 2 ** attempt)); continue; }
-    throw new Error(`Google Tasks said no (error ${res.status}).`);
+    throw new Error(`Your calendar didn't accept the reminders (error ${res.status}).`);
   }
 }
 
 $("addTasks").onclick = async () => {
-  if (!GOOGLE_CLIENT_ID) { $("tasksMsg").textContent = "Google sign-in isn't set up for this page yet (missing client ID). Use the download below for now."; return; }
+  if (!GOOGLE_CLIENT_ID) { $("tasksMsg").textContent = "Sign-in isn't set up for this page yet. Use the download below for now."; return; }
   const items = taskItems(planDoses);
   const btn = $("addTasks");
   btn.disabled = true;
   let added = 0;
   try {
     const token = await getToken();
-    $("tasksMsg").textContent = "Making a \"Medicines\" list in Google Tasks...";
+    $("tasksMsg").textContent = "Making a \"Medicines\" list...";
     const list = await tasksApi(token, "/users/@me/lists", { title: `Medicines (from ${new Date(prefs.startDate + "T12:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })})` });
     // New tasks go to the top of the list, so add the latest first to keep the list in time order
     for (const t of items.slice().reverse()) {
       await tasksApi(token, `/lists/${list.id}/tasks`, { title: t.title, notes: t.notes, due: `${t.date}T00:00:00.000Z` });
-      $("tasksMsg").textContent = `Adding to Google Tasks... ${++added} of ${items.length}`;
+      $("tasksMsg").textContent = `Adding to your calendar... ${++added} of ${items.length}`;
     }
-    $("tasksMsg").innerHTML = `Done! Added ${items.length} tasks to the list "${esc(list.title)}". Check each one off after you take it. <a href="https://tasks.google.com/" target="_blank" rel="noopener">Open Google Tasks</a>`;
-    btn.textContent = "Added to Google Tasks";
+    $("tasksMsg").innerHTML = `Done! Added ${items.length} reminders to the list "${esc(list.title)}". Check each one off after you take it. <a href="https://calendar.google.com/" target="_blank" rel="noopener">Open my calendar</a>`;
+    btn.textContent = "Added to my calendar";
     $("tasksHelp").textContent = "";
   } catch (err) {
     $("tasksMsg").textContent = `${err.message}${added ? ` ${added} of ${items.length} tasks were added before it stopped.` : ""}`;
@@ -616,10 +616,10 @@ function showPlan() {
   $("planStart").textContent = scheduled.length ? `Starting ${start}.` : "Nothing will be on your calendar yet.";
   $("leadNote").textContent = `The downloaded file reminds you ${lead ? `${lead} minutes early` : "at the time"}.`;
   $("addTasks").disabled = !scheduled.length;
-  $("addTasks").textContent = "Add all to Google Tasks";
+  $("addTasks").textContent = "Add to my calendar";
   $("tasksMsg").textContent = "";
   $("tasksHelp").textContent = scheduled.length
-    ? `This adds ${taskItems(scheduled).length} tasks, one for each dose on each day, so you can check them off as you take them. They also show up in Google Calendar.`
+    ? `This adds ${taskItems(scheduled).length} reminders to your calendar, one for each dose on each day, so you can check them off as you take them.`
     : "";
 
   const bySlot = {};
