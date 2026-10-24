@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>After-Care Calendar: Prototype</title>
+<script src="https://accounts.google.com/gsi/client" async></script>
 <style>
   :root { --ink:#1b1f24; --muted:#4a525c; --line:#c9d0d8; --bg:#f6f8fa; --card:#ffffff;
           --accent:#0b5cad; --accent-bg:#e6f0fa; --ok:#1e7b3a; --warn:#7a4800; --bad:#a1262d; --ok-bg:#e7f5ec; --warn-bg:#fff4df; --bad-bg:#fbe9ea; }
@@ -143,9 +144,13 @@
   <h2>Here's your daily plan</h2>
   <p class="muted" id="planStart"></p>
   <div id="plan"></div>
+  <button class="big" id="addTasks">Add all to Google Tasks</button>
+  <p class="note" id="tasksMsg" aria-live="polite"></p>
+  <p class="note" id="tasksHelp"></p>
   <div id="notScheduled"></div>
-  <button class="big" id="download">Download my calendar</button>
-  <p class="note">Then open the downloaded file to add the reminders to your phone or computer calendar.</p>
+  <h3>Use a different calendar?</h3>
+  <p class="note">For Apple Calendar, Outlook, or other apps, download the file and open it. <span id="leadNote"></span></p>
+  <button class="secondary" id="download">Download calendar file</button>
   <div class="nav">
     <button class="secondary" id="changeTimes">Change my times</button>
     <button class="secondary" id="restart">Start over</button>
@@ -527,7 +532,7 @@ function buildIcs() {
         "CATEGORIES:MEDICATION",
         "BEGIN:VALARM", `TRIGGER:-PT${lead}M`, "ACTION:DISPLAY", `DESCRIPTION:${icsEscape("Time for " + m.name)}`, "END:VALARM",
         "END:VEVENT");
-      scheduled.push({ name: m.name, dose: m.dose, slot, hhmm, withFood: m.withFood, days, ongoing: !m.days });
+      scheduled.push({ name: m.name, dose: m.dose, slot, hhmm, withFood: m.withFood, days, ongoing: !m.days, summary, note, tz });
     });
   });
   lines.push("END:VCALENDAR");
@@ -535,14 +540,87 @@ function buildIcs() {
   return scheduled;
 }
 
+// ---------- Google Tasks: one checkable task per dose per day ----------
+// Paste the OAuth client ID from Google Cloud here (see README: "Google Tasks setup"). It is not a secret.
+const GOOGLE_CLIENT_ID = "";
+const TASKS_API = "https://tasks.googleapis.com/tasks/v1";
+let planDoses = []; // scheduled doses from the last plan
+let tokenClient = null;
+
+// The Tasks API stores a due date only (no time) and can't repeat, so expand each dose into one task per day
+function taskItems(scheduled) {
+  const [y, mo, d] = prefs.startDate.split("-").map(Number);
+  const items = [];
+  scheduled.forEach(s => {
+    for (let k = 0; k < s.days; k++) {
+      const date = new Date(Date.UTC(y, mo - 1, d + k)).toISOString().slice(0, 10);
+      items.push({
+        date, hhmm: s.hhmm,
+        title: `${fmtTime(s.hhmm)} · ${s.name} ${s.dose}${s.withFood ? " (with food)" : ""}`,
+        notes: `Day ${k + 1} of ${s.days}. ${s.note}`
+      });
+    }
+  });
+  return items.sort((a, b) => (a.date + a.hhmm).localeCompare(b.date + b.hhmm));
+}
+
+function getToken() {
+  return new Promise((resolve, reject) => {
+    if (!window.google?.accounts?.oauth2) return reject(new Error("Google sign-in didn't load. Check your internet connection and try again."));
+    tokenClient ??= google.accounts.oauth2.initTokenClient({ client_id: GOOGLE_CLIENT_ID, scope: "https://www.googleapis.com/auth/tasks", callback: () => {} });
+    tokenClient.callback = r => r.error ? reject(new Error("Google sign-in was cancelled.")) : resolve(r.access_token);
+    tokenClient.error_callback = () => reject(new Error("Google sign-in was cancelled."));
+    tokenClient.requestAccessToken();
+  });
+}
+
+async function tasksApi(token, path, body) {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(TASKS_API + path, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (res.ok) return res.json();
+    if ((res.status === 429 || res.status >= 500) && attempt < 3) { await new Promise(r => setTimeout(r, 1000 * 2 ** attempt)); continue; }
+    throw new Error(`Google Tasks said no (error ${res.status}).`);
+  }
+}
+
+$("addTasks").onclick = async () => {
+  if (!GOOGLE_CLIENT_ID) { $("tasksMsg").textContent = "Google sign-in isn't set up for this page yet (missing client ID). Use the download below for now."; return; }
+  const items = taskItems(planDoses);
+  const btn = $("addTasks");
+  btn.disabled = true;
+  let added = 0;
+  try {
+    const token = await getToken();
+    $("tasksMsg").textContent = "Making a \"Medicines\" list in Google Tasks...";
+    const list = await tasksApi(token, "/users/@me/lists", { title: `Medicines (from ${new Date(prefs.startDate + "T12:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })})` });
+    // New tasks go to the top of the list, so add the latest first to keep the list in time order
+    for (const t of items.slice().reverse()) {
+      await tasksApi(token, `/lists/${list.id}/tasks`, { title: t.title, notes: t.notes, due: `${t.date}T00:00:00.000Z` });
+      $("tasksMsg").textContent = `Adding to Google Tasks... ${++added} of ${items.length}`;
+    }
+    $("tasksMsg").innerHTML = `Done! Added ${items.length} tasks to the list "${esc(list.title)}". Check each one off after you take it. <a href="https://tasks.google.com/" target="_blank" rel="noopener">Open Google Tasks</a>`;
+    btn.textContent = "Added to Google Tasks";
+    $("tasksHelp").textContent = "";
+  } catch (err) {
+    $("tasksMsg").textContent = `${err.message}${added ? ` ${added} of ${items.length} tasks were added before it stopped.` : ""}`;
+    btn.disabled = false;
+  }
+};
+
 // ---------- Step 4: plain-language daily plan ----------
 function showPlan() {
   const scheduled = buildIcs();
+  planDoses = scheduled;
   const lead = +$("lead").value;
   const start = new Date(prefs.startDate + "T12:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  $("planStart").textContent = scheduled.length
-    ? `Starting ${start}. Your calendar will remind you ${lead ? `${lead} minutes early` : "at the time"}.`
-    : "Nothing will be on your calendar yet.";
+  $("planStart").textContent = scheduled.length ? `Starting ${start}.` : "Nothing will be on your calendar yet.";
+  $("leadNote").textContent = `The downloaded file reminds you ${lead ? `${lead} minutes early` : "at the time"}.`;
+  $("addTasks").disabled = !scheduled.length;
+  $("addTasks").textContent = "Add all to Google Tasks";
+  $("tasksMsg").textContent = "";
+  $("tasksHelp").textContent = scheduled.length
+    ? `This adds ${taskItems(scheduled).length} tasks, one for each dose on each day, so you can check them off as you take them. They also show up in Google Calendar.`
+    : "";
 
   const bySlot = {};
   scheduled.forEach(s => (bySlot[s.hhmm] ??= { slot: s.slot, items: [] }).items.push(s));
