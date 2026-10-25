@@ -3,109 +3,258 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>After-Care Calendar: Prototype</title>
+<title>MedRocket</title>
 <script src="https://accounts.google.com/gsi/client" async></script>
+<script src="https://unpkg.com/convex@1.31.0/dist/browser.bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#1b1f24; --muted:#4a525c; --line:#c9d0d8; --bg:#f6f8fa; --card:#ffffff;
-          --accent:#0b5cad; --accent-bg:#e6f0fa; --ok:#1e7b3a; --warn:#7a4800; --bad:#a1262d; --ok-bg:#e7f5ec; --warn-bg:#fff4df; --bad-bg:#fbe9ea; }
+  /* MedRocket theme: deep-space navy, glassy cards, blue-violet gradients. Text stays large for older users. */
+  :root { --ink:#f2f6ff; --muted:#b9c7ec; --line:rgba(140,170,255,.28); --line-strong:rgba(150,180,255,.6);
+          --bg:#071338; --card:rgba(22,46,122,.55); --card-solid:#142c74; --field:rgba(8,22,72,.65);
+          --accent:#4d8dff; --accent-2:#6d5cff; --grad:linear-gradient(90deg,#3d8bff,#6d5cff); --accent-bg:rgba(77,141,255,.16);
+          --ok:#5fe39a; --ok-bg:rgba(52,211,120,.14); --ok-line:rgba(95,227,154,.45);
+          --warn:#ffd27a; --warn-bg:rgba(251,191,36,.13);
+          --bad:#ff9b9b; --bad-bg:rgba(248,113,113,.15); --bad-line:rgba(255,155,155,.45); }
   * { box-sizing: border-box; }
-  body { margin:0; font: 20px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
-  header { background:var(--ink); color:#fff; padding:16px 20px; }
-  header h1 { margin:0; font-size:24px; font-weight:650; }
-  header p { margin:4px 0 0; color:#c9d1da; font-size:16px; }
-  main { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
-  .disclaimer { background:#fff8e6; border:1px solid #e8c766; padding:12px 16px; border-radius:8px; font-size:17px; margin-bottom:16px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px 20px; margin-bottom:18px; }
-  h2 { font-size:26px; margin:0 0 12px; line-height:1.3; }
-  h3 { font-size:21px; margin:18px 0 8px; }
-  textarea { width:100%; min-height:180px; font: 17px/1.45 ui-monospace, Menlo, Consolas, monospace; padding:12px; border:1px solid var(--line); border-radius:8px; }
-  button { font: inherit; font-size:20px; min-height:56px; padding:10px 22px; border-radius:10px; border:2px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; margin:6px 8px 6px 0; }
-  button.secondary { background:#fff; color:var(--accent); }
+  html { background:#081648; }
+  /* The gradient scrolls with the page (fixed backgrounds break on iOS and leave gaps on long pages) */
+  body { margin:0; font: 20px/1.5 "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink);
+         background:
+           radial-gradient(1200px 520px at 88% 0, rgba(110,150,255,.35), transparent 60%),
+           radial-gradient(900px 700px at -10% 100%, rgba(80,60,220,.35), transparent 60%),
+           linear-gradient(180deg, #0a1b52 0, #071338 600px, #081648 100%);
+         min-height:100vh; }
+  a { color:#9cc0ff; }
+
+  /* Header */
+  header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 24px; border-bottom:1px solid var(--line);
+           background:linear-gradient(180deg, rgba(10,25,80,.85), rgba(10,25,80,.35)); }
+  .brand { display:flex; align-items:center; gap:14px; }
+  .brand svg { width:72px; height:72px; flex-shrink:0; filter:drop-shadow(0 6px 14px rgba(80,120,255,.45)); }
+  header h1 { margin:0; font-size:40px; font-weight:800; letter-spacing:-.5px; line-height:1; }
+  header h1 span { background:linear-gradient(90deg,#4d8dff,#7aa8ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  header p { margin:6px 0 0; color:var(--muted); font-size:18px; }
+  .trust { display:flex; align-items:center; gap:10px; padding:10px 18px; border:1px solid var(--line); border-radius:12px; background:rgba(8,22,72,.55); font-size:15px; font-weight:600; white-space:nowrap; }
+  .trust svg { width:20px; height:20px; }
+  .trust i { font-style:normal; color:var(--muted); }
+  @media (max-width:720px) { .trust { display:none; } header h1 { font-size:32px; } .brand svg { width:46px; height:46px; } }
+
+  main { max-width: 980px; margin: 0 auto; padding: 22px 16px 40px; }
+  .disclaimer { display:flex; gap:16px; align-items:center; background:var(--card); border:1px solid var(--line); padding:16px 22px; border-radius:14px; font-size:18px; margin-bottom:18px; }
+  .disclaimer strong { display:block; font-weight:700; }
+  .disclaimer span { color:var(--muted); }
+  .icon-circle { flex-shrink:0; display:grid; place-items:center; width:52px; height:52px; border-radius:50%; background:rgba(77,141,255,.18); border:1px solid var(--line); }
+  .icon-circle svg { width:26px; height:26px; }
+  .disclaimer .icon-circle { background:var(--grad); border:0; width:46px; height:46px; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:28px 24px; margin-bottom:18px;
+          box-shadow:0 20px 50px rgba(0,0,0,.25); backdrop-filter:blur(8px); }
+  .card-title { display:flex; align-items:center; gap:18px; margin-bottom:14px; }
+  .card-title .icon-circle { width:72px; height:72px; }
+  .card-title .icon-circle svg { width:34px; height:34px; }
+  .card-title h2 { margin:0; }
+  h2 { font-size:30px; font-weight:800; margin:0 0 12px; line-height:1.25; }
+  h3 { font-size:22px; margin:20px 0 8px; }
+  footer { text-align:center; color:var(--muted); font-size:15px; padding:0 16px 28px; }
+
+  /* Controls */
+  textarea { width:100%; min-height:130px; font: 17px/1.45 ui-monospace, Menlo, Consolas, monospace; padding:14px 16px; color:var(--ink); background:var(--field); border:1px solid var(--line); border-radius:12px; }
+  textarea::placeholder { color:var(--muted); font-family:"Plus Jakarta Sans", system-ui, sans-serif; font-size:19px; }
+  button { font: inherit; font-size:20px; font-weight:700; min-height:56px; padding:10px 24px; border-radius:12px; border:0; background:var(--grad); color:#fff; cursor:pointer; margin:6px 8px 6px 0;
+           box-shadow:0 8px 22px rgba(70,110,255,.35); display:inline-flex; align-items:center; justify-content:center; gap:12px; }
+  button.secondary { background:transparent; color:var(--ink); border:2px solid var(--line-strong); box-shadow:none; }
+  button.secondary:hover { background:rgba(120,160,255,.12); }
   button:disabled { opacity:.45; cursor:not-allowed; }
-  button:focus-visible, .filebtn:focus-within { outline:3px solid var(--ink); outline-offset:2px; }
-  input, select { font: inherit; font-size:20px; padding:10px 12px; border:2px solid var(--line); border-radius:8px; background:#fff; }
+  button svg, .filebtn svg { width:26px; height:26px; flex-shrink:0; }
+  button:focus-visible, .filebtn:focus-within, .dropzone:focus-within, a:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+  input, select { font: inherit; font-size:20px; padding:10px 12px; color:var(--ink); background:var(--field); border:2px solid var(--line); border-radius:10px; }
+  select option { background:var(--card-solid); }
   label { display:inline-block; margin:6px 16px 6px 0; }
-  .steps { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
-  .step { padding:6px 14px; border-radius:999px; background:#e3e8ee; color:var(--muted); font-size:17px; }
-  .step.on { background:var(--accent); color:#fff; font-weight:600; }
-  .feed { font-family: ui-monospace, Menlo, Consolas, monospace; background:#f1f4f7; padding:10px 12px; border-radius:6px; word-break:break-all; font-size:16px; }
+
+  /* Step bar: the current step is an arrow-shaped gradient tab */
+  .steps { display:flex; margin-bottom:18px; background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .step { flex:1; display:flex; align-items:center; gap:14px; padding:12px 22px; color:var(--muted); font-size:19px; font-weight:600; position:relative; }
+  .step b { display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; border-radius:50%; background:rgba(120,160,255,.18); border:1px solid var(--line); color:var(--ink); font-size:20px; }
+  .step:not(:last-child)::after { content:""; position:absolute; right:4px; top:50%; width:26px; height:26px; border-top:1px solid var(--line-strong); border-right:1px solid var(--line-strong); transform:translateY(-50%) rotate(45deg); }
+  .step.on { background:var(--grad); color:#fff; clip-path:polygon(0 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 0 100%); }
+  .step.on::after { display:none; }
+  .step.on b { background:#fff; color:#3d6dff; border:0; }
+  .step.done b { background:var(--ok-bg); color:var(--ok); border-color:var(--ok-line); }
+  .step span { white-space:nowrap; }
+  @media (max-width:720px) { .step { padding:10px 14px; gap:8px; } .step:not(.on) span { display:none; } .step.on { flex:2.5; } .step span { white-space:normal; line-height:1.2; } }
+
+  .feed { font-family: ui-monospace, Menlo, Consolas, monospace; background:rgba(0,0,0,.25); padding:10px 12px; border-radius:8px; word-break:break-all; font-size:16px; }
   .muted { color:var(--muted); font-size:18px; }
-  .count { color:var(--muted); font-size:18px; font-weight:600; margin:0 0 6px; }
+  .count { color:var(--muted); font-size:18px; font-weight:700; margin:0 0 6px; letter-spacing:.2px; }
   .hidden { display:none !important; }
   .note { font-size:17px; color:var(--muted); }
-  .upload { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; margin-bottom:10px; }
-  .filebtn { display:inline-flex; align-items:center; min-height:56px; font-size:20px; padding:10px 22px; border-radius:10px; border:2px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; margin:6px 8px 6px 0; }
+
+  /* Step 1: upload */
+  .upload { display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; margin:18px 0 14px; }
+  .upload > * { margin:0; }
+  .upload button, .filebtn { min-width:260px; }
+  .filebtn { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:64px; font-size:21px; font-weight:700; padding:10px 26px; border-radius:12px; background:var(--grad); color:#fff; cursor:pointer; box-shadow:0 8px 22px rgba(70,110,255,.35); }
+  .upload button.secondary { min-height:64px; font-size:21px; }
   .filebtn input { position:absolute; width:1px; height:1px; opacity:0; }
-  .photo { max-width:100%; max-height:420px; border:1px solid var(--line); border-radius:8px; display:block; margin:6px 0; }
-  details summary { cursor:pointer; color:var(--accent); font-size:18px; padding:8px 0; }
+  .dllink { display:inline-flex; align-items:center; gap:10px; font-size:19px; font-weight:600; }
+  .dllink svg { width:26px; height:26px; }
+  .dropzone { display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; padding:28px 16px; margin:0 0 6px; width:100%;
+              border:2px dashed var(--line-strong); border-radius:14px; background:rgba(8,22,72,.35); cursor:pointer; }
+  .dropzone.over { background:rgba(77,141,255,.18); border-color:#9cc0ff; }
+  .dropzone svg { width:64px; height:64px; margin-bottom:6px; }
+  .dropzone strong { font-size:22px; }
+  .dropzone .pill { margin-top:8px; padding:4px 14px; border:1px solid var(--line); border-radius:999px; font-size:15px; color:var(--muted); }
+  .or { display:flex; align-items:center; gap:14px; color:var(--muted); font-size:16px; font-weight:700; margin:14px 0; }
+  .or::before, .or::after { content:""; flex:1; height:1px; background:var(--line); }
+  .s1-actions { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin-top:12px; }
+  .s1-actions button { margin:0; min-width:260px; min-height:64px; font-size:21px; }
+  .photo { max-width:100%; max-height:420px; border:1px solid var(--line); border-radius:10px; display:block; margin:6px 0; }
+  details summary { cursor:pointer; color:#9cc0ff; font-size:18px; font-weight:600; padding:8px 0; }
+
   /* Medicine check card */
-  .medname { font-size:28px; font-weight:700; margin:0; }
+  .medname { font-size:32px; font-weight:800; margin:0; }
   .facts { list-style:none; padding:0; margin:12px 0; font-size:22px; }
-  .facts li { padding:6px 0; border-bottom:1px solid #edf0f3; }
+  .facts li { padding:8px 0; border-bottom:1px solid var(--line); }
   .facts li:last-child { border-bottom:0; }
   .source { margin:14px 0; }
   .source .label { font-size:17px; color:var(--muted); margin-bottom:4px; }
-  .crop { display:block; max-width:100%; height:auto; border:2px solid var(--line); border-radius:6px; background:#fff; }
-  .quote { font: 18px/1.4 ui-monospace, Menlo, Consolas, monospace; background:#f1f4f7; padding:10px 12px; border-radius:6px; }
-  .callout { border-radius:8px; padding:12px 14px; margin:12px 0; font-size:19px; }
-  .callout.warn { background:var(--warn-bg); color:var(--warn); }
-  .callout.info { background:var(--accent-bg); color:#0a3f75; }
-  .ask { font-size:22px; font-weight:600; margin:18px 0 4px; }
+  .crop { display:block; max-width:100%; height:auto; border:2px solid var(--line-strong); border-radius:8px; background:#fff; }
+  .quote { font: 18px/1.4 ui-monospace, Menlo, Consolas, monospace; background:rgba(0,0,0,.25); padding:10px 12px; border-radius:8px; }
+  .callout { border-radius:12px; padding:14px 16px; margin:12px 0; font-size:19px; border:1px solid transparent; }
+  .callout.warn { background:var(--warn-bg); color:var(--warn); border-color:rgba(255,210,122,.35); }
+  .callout.info { background:var(--accent-bg); color:#cfe0ff; border-color:var(--line); }
+  .ask { font-size:23px; font-weight:700; margin:20px 0 4px; }
   .actions button { width:100%; }
   @media (min-width:560px) { .actions button { width:auto; } }
-  .fix label { display:block; margin:14px 0 4px; font-weight:600; }
+  .fix label { display:block; margin:14px 0 4px; font-weight:700; }
+
   /* Time choices */
-  .choices { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin:14px 0; }
-  .choices button { margin:0; background:#fff; color:var(--ink); border-color:var(--line); }
-  .choices button.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; }
-  .nav { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:20px; }
+  .choices { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin:16px 0; }
+  .choices button { margin:0; background:var(--field); color:var(--ink); border:2px solid var(--line); box-shadow:none; flex-direction:column; gap:0; }
+  .choices button.on { background:var(--grad); border-color:transparent; box-shadow:0 8px 22px rgba(70,110,255,.35); }
+  .choices button .note { color:inherit; opacity:.85; }
+  .nav { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin-top:22px; }
   .nav button { margin:0; }
   .more { margin-top:18px; }
   .more label { display:block; margin:10px 0; font-size:18px; }
+
   /* Daily plan */
-  .slot { border:2px solid var(--line); border-radius:10px; padding:12px 16px; margin:12px 0; }
-  .slot .time { font-size:24px; font-weight:700; }
-  .slot .when { color:var(--muted); font-size:18px; margin-left:6px; }
+  .slot { border:1px solid var(--line); background:rgba(8,22,72,.4); border-radius:14px; padding:14px 18px; margin:12px 0; }
+  .slot .time { font-size:26px; font-weight:800; }
+  .slot .when { color:var(--muted); font-size:18px; margin-left:8px; }
   .slot ul { margin:8px 0 0; padding-left:22px; }
   .slot li { margin:6px 0; font-size:21px; }
   .slot .detail { display:block; color:var(--muted); font-size:17px; }
   .offlist li { margin:8px 0; }
-  button.big { width:100%; font-size:22px; min-height:64px; margin:16px 0 4px; }
+  button.big { width:100%; font-size:22px; min-height:66px; margin:18px 0 4px; }
+
+  /* Sharing and the family view */
+  .sharelabel { display:block; margin:14px 0 4px; font-weight:700; font-size:18px; }
+  .copyrow { display:flex; gap:8px; }
+  .copyrow input { flex:1; min-width:0; font-size:16px; }
+  .copyrow button { margin:0; }
+  .dose { display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid var(--line); background:rgba(8,22,72,.4); border-radius:14px; padding:14px 16px; margin:10px 0; font-size:21px; }
+  .dose .dtime { font-weight:800; }
+  .dose .dstatus { font-size:17px; color:var(--muted); }
+  .dose.taken { background:var(--ok-bg); border-color:var(--ok-line); }
+  .dose.taken .dstatus { color:var(--ok); font-weight:700; }
+  .dose.missed { background:var(--bad-bg); border-color:var(--bad-line); }
+  .dose.missed .dstatus { color:var(--bad); font-weight:700; }
+  .callout.bad { background:var(--bad-bg); color:var(--bad); border-color:var(--bad-line); }
+  .callout.bad ul { margin:6px 0 0; padding-left:22px; }
+  .dayrow { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .dayname { width:110px; font-size:16px; font-weight:700; }
+  .chip { font-size:14px; padding:3px 10px; border-radius:999px; background:rgba(120,160,255,.15); color:var(--muted); }
+  .chip.taken { background:var(--ok-bg); color:var(--ok); }
+  .chip.missed { background:var(--bad-bg); color:var(--bad); }
+  #checkNow { margin:4px 0 8px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Patient After-Care Support Calendar</h1>
-  <p>Prototype for Cal Hacks demo. Synthetic data only. Not medical advice.</p>
+  <div class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="rkBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9db8ff"/></linearGradient>
+        <linearGradient id="rkFin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4d8dff"/><stop offset="1" stop-color="#7b5cff"/></linearGradient>
+        <linearGradient id="rkFlame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9f7bff"/><stop offset="1" stop-color="#4d8dff" stop-opacity="0"/></linearGradient>
+      </defs>
+      <g transform="rotate(45 32 32)">
+        <path d="M32 48h0c-3 0-5 2-5 5l5 11 5-11c0-3-2-5-5-5z" fill="url(#rkFlame)"/>
+        <path d="M22 33l-8 9v6l9-4zM42 33l8 9v6l-9-4z" fill="url(#rkFin)"/>
+        <path d="M32 3c9 7 12 18 12 29v12H20V32C20 21 23 10 32 3z" fill="url(#rkBody)"/>
+        <circle cx="32" cy="24" r="6" fill="#2f5bff" stroke="#fff" stroke-width="2.5"/>
+        <path d="M25 44h14l-2 5H27z" fill="url(#rkFin)"/>
+      </g>
+    </svg>
+    <div>
+      <h1>Med<span>Rocket</span></h1>
+      <p>Your health, on course.</p>
+    </div>
+  </div>
+  <div class="trust">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(255,255,255,.15)"/><path d="M9 12l2 2 4-4"/></svg>
+    Secure <i>•</i> Private <i>•</i> Syncs with your calendar
+  </div>
 </header>
 <main>
 
-<div class="disclaimer">This calendar is made from your prescription paper and is only for reminders. It is not medical advice. Always follow your doctor's and pharmacist's instructions.</div>
+<div class="disclaimer">
+  <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 11v6M12 7.5v.01"/></svg></div>
+  <div><strong>This calendar is made from your prescription paper and is only for reminders. It is not medical advice.</strong>
+  <span>Always follow your doctor's and pharmacist's instructions.</span></div>
+</div>
 
 <div class="steps" id="steps">
-  <span class="step on">1. Your paper</span>
-  <span class="step">2. Check medicines</span>
-  <span class="step">3. Your times</span>
-  <span class="step">4. Your plan</span>
+  <span class="step on"><b>1</b><span>Your paper</span></span>
+  <span class="step"><b>2</b><span>Check medicines</span></span>
+  <span class="step"><b>3</b><span>Your times</span></span>
+  <span class="step"><b>4</b><span>Your plan</span></span>
 </div>
 
 <!-- STEP 1: UPLOAD -->
 <section id="s1" class="card">
-  <h2>Add your discharge paper</h2>
-  <p class="muted">Take or upload a photo of your discharge sheet, or paste its text. Photos are read on this device; check the text it finds before going on. PDF upload is on the roadmap.</p>
-  <div class="upload">
-    <label class="filebtn">Upload photo<input type="file" id="photoInput" accept="image/*"></label>
-    <button class="secondary" id="loadSamplePhoto">Use sample photo</button>
-    <a class="note" href="samples/sample-discharge-photo.jpg" download>Download sample photo</a>
+  <div class="card-title">
+    <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="#cfe0ff" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" fill="rgba(160,190,255,.25)"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg></div>
+    <h2>Add your discharge paper</h2>
   </div>
+  <p class="muted">Take or upload a photo of your discharge sheet, or paste its text. Photos are read on this device; check the text it finds before going on.</p>
+  <div class="upload">
+    <label class="filebtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="#fff"/><circle cx="12" cy="13" r="3.5" fill="#4d7dff" stroke="#4d7dff"/></svg>
+      Upload photo<input type="file" id="photoInput" accept="image/*">
+    </label>
+    <button class="secondary" id="loadSamplePhoto">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 16l-5-5-11 10"/></svg>
+      Use sample photo
+    </button>
+    <a class="dllink" href="samples/sample-discharge-photo.jpg" download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9cc0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+      Download sample photo
+    </a>
+  </div>
+  <label class="dropzone" id="dropzone" for="photoInput">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#9cc0ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.6 1.5A3.75 3.75 0 0 1 17.5 18"/><path d="M12 12v9M8.5 15.5L12 12l3.5 3.5"/></svg>
+    <strong>Drag and drop your photo here</strong>
+    <span class="muted">or click to browse</span>
+    <span class="pill">Supports JPG, PNG (max 10 MB)</span>
+  </label>
   <div id="photoWrap" class="hidden">
     <img id="photoPreview" class="photo" alt="Uploaded discharge document">
   </div>
   <p class="note" id="ocrMsg" aria-live="polite"></p>
-  <textarea id="docText" aria-label="Prescription text"></textarea>
-  <div>
-    <button class="secondary" id="loadSample">Load sample text</button>
-    <button id="extract">Next: check my medicines</button>
+  <div class="or">OR</div>
+  <textarea id="docText" aria-label="Prescription text" placeholder="Or paste the text from your discharge paper here..."></textarea>
+  <div class="s1-actions">
+    <button class="secondary" id="loadSample">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+      Load sample text
+    </button>
+    <button id="extract">Next: check my medicines
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
   </div>
   <p class="note" id="extractMsg"></p>
 </section>
@@ -147,6 +296,13 @@
   <button class="big" id="addTasks">Add to my calendar</button>
   <p class="note" id="tasksMsg" aria-live="polite"></p>
   <p class="note" id="tasksHelp"></p>
+  <div id="shareLinks" class="hidden">
+    <h3>Share with family</h3>
+    <p class="note">Send this link to a family member or caregiver. When you check off a dose in your calendar, it shows up for them.</p>
+    <label class="sharelabel" for="careLink">Family link</label>
+    <div class="copyrow"><input id="careLink" readonly><button class="secondary" id="copyCare">Copy</button></div>
+    <p><a class="note" id="careOpen" target="_blank" rel="noopener">Open the family page</a></p>
+  </div>
   <div id="notScheduled"></div>
   <h3>Use a different calendar?</h3>
   <p class="note">For Apple Calendar, Outlook, or other apps, download the file and open it. <span id="leadNote"></span></p>
@@ -157,22 +313,29 @@
   </div>
   <details class="more">
     <summary>Other ways to add it</summary>
-    <p class="note">Subscribe once: add this link in Google Calendar (Other calendars, From URL), Apple Calendar (Add Subscription), or Outlook (Add calendar, Subscribe from web). Changes show up on refresh; Outlook can take up to 24 hours.</p>
+    <p class="note">Subscribe once: add this link in Google Calendar (Other calendars, From URL), Apple Calendar (Add Subscription), or Outlook (Add calendar, Subscribe from web). Doses you check off show a ✓ after the calendar refreshes; Outlook can take up to 24 hours.</p>
     <div class="feed" id="feedUrl"></div>
-    <p class="note">In the full product, this link is served by the backend. In this prototype it is a placeholder, so use the download above.</p>
   </details>
 </section>
 
+<!-- FAMILY VIEW, READ ONLY (?c=...) -->
+<section id="sCare" class="card hidden">
+  <h2>Medicine check-in</h2>
+  <p class="note">Doses checked off in their calendar show up here by themselves. <span id="careUpdated"></span></p>
+  <button class="secondary" id="checkNow">Check now</button>
+  <div id="careBody" aria-live="polite"><p class="muted">Loading...</p></div>
+</section>
+
 </main>
+<footer>MedRocket prototype for Cal Hacks. Synthetic data only. Not medical advice.</footer>
 
 <script>
 // ---------- Sample synthetic discharge sheet ----------
 const SAMPLE = `DISCHARGE PRESCRIPTIONS (SYNTHETIC)
-1. Amoxicillin 500 mg PO BID with food x 10 days
-2. Acetaminophen 325 mg PO every 6 hours as needed for pain
-3. Prednisone taper: 30 mg PO daily x 3 days, then 20 mg daily x 3 days, then 10 mg daily x 3 days
-4. Metformin 500 mg PO daily with dinner
-5. Lisinopril 10 mg PO once daily`;
+1. Cephalexin 500 mg PO BID with food x 2 days
+2. Ibuprofen 400 mg PO every 6 hours as needed for pain
+3. Prednisone taper: 40 mg PO daily x 2 days, then 20 mg daily x 2 days, then 10 mg daily x 2 days
+4. Famotidine 20 mg PO at bedtime x 1 day`;
 
 // ---------- State ----------
 let meds = [];     // extracted + reviewed records
@@ -274,6 +437,7 @@ function fmtTime(hhmm) {
   return `${(h + 11) % 12 + 1}:${String(mi).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 }
 const ongoingLabel = () => $("ongoingDays").selectedOptions[0].text;
+const dayCount = n => `${n} ${n === 1 ? "day" : "days"}`;
 
 // ---------- Step 2: check one medicine at a time ----------
 function ocrLinesFor(m) {
@@ -321,7 +485,7 @@ function renderCard() {
     notes = `<div class="callout warn">We couldn't tell how often to take this.</div>`;
     actions = `<button id="fixIt">Fix it</button><button class="secondary" id="leaveOff">Leave it off my calendar</button>`;
   } else {
-    facts = [esc(m.dose), howOften(m), m.withFood ? "With food" : "", m.days ? `For ${m.days} days` : "No end date on the paper"]
+    facts = [esc(m.dose), howOften(m), m.withFood ? "With food" : "", m.days ? `For ${dayCount(m.days)}` : "No end date on the paper"]
       .filter(Boolean).map(f => `<li>${f}</li>`).join("");
     if (!m.days) notes = `<div class="callout warn">Your paper doesn't say how many days to take this. We'll remind you for ${ongoingLabel()}. Ask your pharmacist how long to keep taking it.</div>`;
     actions = cardMode === "wrong"
@@ -519,7 +683,7 @@ function buildIcs() {
       const start = zonedToUtc(y, mo, d, h, mi, tz);
       const end = new Date(start.getTime() + 5 * 60000);
       const summary = `Take ${m.name} ${m.dose}`;
-      const note = [m.withFood ? "Take with food." : "", m.days ? `Course: ${m.days} days.` : "Ongoing: confirm length with provider.", "Not medical advice; confirm with your provider or pharmacist."].filter(Boolean).join(" ");
+      const note = [m.withFood ? "Take with food." : "", m.days ? `Course: ${dayCount(m.days)}.` : "Ongoing: confirm length with provider.", "Not medical advice; confirm with your provider or pharmacist."].filter(Boolean).join(" ");
       lines.push("BEGIN:VEVENT",
         `UID:${m.id}-slot${si + 1}@aftercare-calendar`,
         `DTSTAMP:${now}`,
@@ -540,70 +704,75 @@ function buildIcs() {
   return scheduled;
 }
 
-// ---------- Google Tasks: one checkable task per dose per day ----------
-// Paste the OAuth client ID from Google Cloud here (see README: "Google Tasks setup"). It is not a secret.
+// ---------- Add to my calendar: the backend creates one Google task per dose and watches for check-offs ----------
+// OAuth client ID from Google Cloud (see README: "Google Tasks setup"). It is not a secret.
 const GOOGLE_CLIENT_ID = "504394908885-5k0n1rkge6o2dm23rc82b7t967rbghot.apps.googleusercontent.com";
-const TASKS_API = "https://tasks.googleapis.com/tasks/v1";
 let planDoses = []; // scheduled doses from the last plan
-let tokenClient = null;
 
-// The Tasks API stores a due date only (no time) and can't repeat, so expand each dose into one task per day
-function taskItems(scheduled) {
+// One entry per dose per day, in time order
+function expandDoses(scheduled) {
   const [y, mo, d] = prefs.startDate.split("-").map(Number);
   const items = [];
   scheduled.forEach(s => {
+    const [h, mi] = s.hhmm.split(":").map(Number);
     for (let k = 0; k < s.days; k++) {
-      const date = new Date(Date.UTC(y, mo - 1, d + k)).toISOString().slice(0, 10);
       items.push({
-        date, hhmm: s.hhmm,
-        title: `${fmtTime(s.hhmm)} · ${s.name} ${s.dose}${s.withFood ? " (with food)" : ""}`,
-        notes: `Day ${k + 1} of ${s.days}. ${s.note}`
+        date: new Date(Date.UTC(y, mo - 1, d + k)).toISOString().slice(0, 10),
+        hhmm: s.hhmm, slot: s.slot, name: s.name, dose: s.dose, withFood: s.withFood,
+        note: `Day ${k + 1} of ${s.days}. ${s.note}`,
+        dueAt: zonedToUtc(y, mo, d + k, h, mi, s.tz).getTime()
       });
     }
   });
-  return items.sort((a, b) => (a.date + a.hhmm).localeCompare(b.date + b.hhmm));
+  return items.sort((a, b) => a.dueAt - b.dueAt);
 }
 
-function getToken() {
+// Google sign-in pop-up that returns a one-time code. The backend swaps it (with the client secret)
+// for lasting access to the patient's Tasks, so it can notice check-offs after this page is closed.
+function getGoogleCode() {
   return new Promise((resolve, reject) => {
     if (!window.google?.accounts?.oauth2) return reject(new Error("Sign-in didn't load. Check your internet connection and try again."));
-    tokenClient ??= google.accounts.oauth2.initTokenClient({ client_id: GOOGLE_CLIENT_ID, scope: "https://www.googleapis.com/auth/tasks", callback: () => {} });
-    tokenClient.callback = r => r.error ? reject(new Error("Sign-in was cancelled.")) : resolve(r.access_token);
-    tokenClient.error_callback = () => reject(new Error("Sign-in was cancelled or blocked. Allow pop-ups and try again."));
-    tokenClient.requestAccessToken();
+    google.accounts.oauth2.initCodeClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "https://www.googleapis.com/auth/tasks",
+      ux_mode: "popup",
+      callback: r => r.error ? reject(new Error("Sign-in was cancelled.")) : resolve(r.code),
+      error_callback: () => reject(new Error("Sign-in was cancelled or blocked. Allow pop-ups and try again."))
+    }).requestCode();
   });
 }
 
-async function tasksApi(token, path, body) {
-  for (let attempt = 0; ; attempt++) {
-    const res = await fetch(TASKS_API + path, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (res.ok) return res.json();
-    if ((res.status === 429 || res.status >= 500) && attempt < 3) { await new Promise(r => setTimeout(r, 1000 * 2 ** attempt)); continue; }
-    throw new Error(`Your calendar didn't accept the reminders (error ${res.status}).`);
-  }
-}
-
 $("addTasks").onclick = async () => {
-  if (!GOOGLE_CLIENT_ID) { $("tasksMsg").textContent = "Sign-in isn't set up for this page yet. Use the download below for now."; return; }
-  const items = taskItems(planDoses);
+  if (!convexClient) { $("tasksMsg").textContent = "This isn't set up yet. Use the download below for now."; return; }
   const btn = $("addTasks");
   btn.disabled = true;
-  let added = 0;
+  const token = randHex(), careToken = randHex();
+  const notScheduled = meds.filter(m => m.include && !statusOf(m).schedulable).map(m => ({ name: m.name, reason: statusOf(m).reason }));
+  let stopProgress = null;
   try {
-    const token = await getToken();
-    $("tasksMsg").textContent = "Making a \"Medicines\" list...";
-    const list = await tasksApi(token, "/users/@me/lists", { title: `Medicines (from ${new Date(prefs.startDate + "T12:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })})` });
-    // New tasks go to the top of the list, so add the latest first to keep the list in time order
-    for (const t of items.slice().reverse()) {
-      await tasksApi(token, `/lists/${list.id}/tasks`, { title: t.title, notes: t.notes, due: `${t.date}T00:00:00.000Z` });
-      $("tasksMsg").textContent = `Adding to your calendar... ${++added} of ${items.length}`;
-    }
-    $("tasksMsg").innerHTML = `Done! Added ${items.length} reminders to the list "${esc(list.title)}". Check each one off after you take it. <a href="https://calendar.google.com/" target="_blank" rel="noopener">Open my calendar</a>`;
+    const code = await getGoogleCode(); // first, so the pop-up opens straight from the click
+    $("tasksMsg").textContent = "Saving your plan...";
+    await convexClient.mutation("plans:create", {
+      token, careToken, startDate: prefs.startDate, tz: $("tz").value, leadMinutes: +$("lead").value,
+      notScheduled, doses: expandDoses(planDoses)
+    });
+    stopProgress = convexClient.onUpdate("plans:calendarProgress", { token }, p => {
+      if (p && p.added < p.total) $("tasksMsg").textContent = `Adding to your calendar... ${p.added} of ${p.total}`;
+    });
+    const r = await convexClient.action("google:addToCalendar", { token, code });
+    $("tasksMsg").innerHTML = `Done! Added ${r.count} reminders to the list "${esc(r.listTitle)}". Check each one off after you take it. <a href="https://calendar.google.com/" target="_blank" rel="noopener">Open my calendar</a>`;
     btn.textContent = "Added to my calendar";
     $("tasksHelp").textContent = "";
+    $("careLink").value = $("careOpen").href = pageUrl(`c=${careToken}`);
+    $("feedUrl").textContent = `${CONVEX_SITE.replace(/^https?:/, "webcal:")}/feeds/${token}.ics`;
+    $("shareLinks").classList.remove("hidden");
   } catch (err) {
-    $("tasksMsg").textContent = `${err.message}${added ? ` ${added} of ${items.length} tasks were added before it stopped.` : ""}`;
+    console.error(err);
+    $("tasksMsg").textContent = /cancel|blocked|didn't load/.test(err.message) ? err.message
+      : `Couldn't add to your calendar. Please try again.${/GOOGLE_CLIENT_SECRET/.test(err.message) ? " (Setup: the server's Google secret is missing.)" : ""}`;
     btn.disabled = false;
+  } finally {
+    stopProgress?.();
   }
 };
 
@@ -619,7 +788,7 @@ function showPlan() {
   $("addTasks").textContent = "Add to my calendar";
   $("tasksMsg").textContent = "";
   $("tasksHelp").textContent = scheduled.length
-    ? `This adds ${taskItems(scheduled).length} reminders to your calendar, one for each dose on each day, so you can check them off as you take them.`
+    ? `This adds ${expandDoses(scheduled).length} reminders to your calendar, one for each dose on each day. Check them off as you take them, and family members you share with will see it.`
     : "";
 
   const bySlot = {};
@@ -628,7 +797,7 @@ function showPlan() {
     const { slot, items } = bySlot[hhmm];
     return `<div class="slot">
       <span class="time">${fmtTime(hhmm)}</span><span class="when">${esc(SLOT_LABEL[slot] ?? "")}</span>
-      <ul>${items.map(s => `<li>${esc(s.name)} ${esc(s.dose)}<span class="detail">${[s.withFood ? "With food" : "", s.ongoing ? `No end date on the paper, reminding you for ${ongoingLabel()}` : `For ${s.days} days`].filter(Boolean).join(" · ")}</span></li>`).join("")}</ul>
+      <ul>${items.map(s => `<li>${esc(s.name)} ${esc(s.dose)}<span class="detail">${[s.withFood ? "With food" : "", s.ongoing ? `No end date on the paper, reminding you for ${ongoingLabel()}` : `For ${dayCount(s.days)}`].filter(Boolean).join(" · ")}</span></li>`).join("")}</ul>
     </div>`;
   }).join("");
 
@@ -637,10 +806,77 @@ function showPlan() {
   $("notScheduled").innerHTML = off.length ? `<h3>Not on your calendar</h3><ul class="offlist">${off.join("")}</ul>` : "";
 
   $("download").disabled = !scheduled.length;
-  const token = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
-  $("feedUrl").textContent = `webcal://[your-domain]/feeds/${token}.ics`;
+  $("shareLinks").classList.add("hidden");
+  $("copyCare").textContent = "Copy";
+  $("feedUrl").textContent = convexClient ? "Add your plan to your calendar first to get your link." : "Not available in this prototype yet. Use the download above.";
   show(4);
 }
+
+// ---------- Convex backend: saved plans, live family view, calendar feed ----------
+// Set to your deployment URL (from .env.local after `npx convex dev`). Empty = calendar sync and sharing are off.
+const CONVEX_URL = "https://neighborly-gecko-163.convex.cloud";
+const convexClient = CONVEX_URL && window.convex ? new convex.ConvexClient(CONVEX_URL) : null;
+const CONVEX_SITE = CONVEX_URL.replace(".convex.cloud", ".convex.site").replace(/:3210$/, ":3211"); // HTTP endpoints
+const randHex = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+const pageUrl = param => `${location.origin}${location.pathname}?${param}`;
+
+$("copyCare").onclick = async () => {
+  try { await navigator.clipboard.writeText($("careLink").value); $("copyCare").textContent = "Copied!"; }
+  catch { $("careLink").select(); }
+};
+
+const clock = (ms, seconds) => new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", ...(seconds && { second: "2-digit" }) });
+const STATUS = {
+  taken:   { cls: "taken",   label: d => `✓ Taken${d.takenAt ? ` at ${clock(d.takenAt)}` : ""}` },
+  missed:  { cls: "missed",  label: () => "Missed" },
+  pending: { cls: "pending", label: d => d.dueAt < Date.now() ? "Not checked off yet" : "Coming up" }
+};
+const localDate = (ms, tz) => new Date(ms).toLocaleDateString("en-CA", { timeZone: tz });
+const longDate = ymd => new Date(ymd + "T12:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+const doseLine = d => `<span class="dtime">${fmtTime(d.hhmm)}</span> ${esc(d.name)} ${esc(d.dose)}${d.withFood ? ` <span class="note">(with food)</span>` : ""}`;
+
+// The day to show: today, or the first day if the plan hasn't started yet
+function focusDay(data) {
+  const today = localDate(Date.now(), data.tz);
+  return today < data.startDate ? data.startDate : today;
+}
+
+function renderCare(data) {
+  if (!data) { $("careBody").innerHTML = `<p class="muted">We couldn't find this plan. Check the link.</p>`; return; }
+  const day = focusDay(data);
+  const today = data.doses.filter(d => d.date === day);
+  const missed = data.doses.filter(d => d.status === "missed");
+  const byDay = {};
+  data.doses.forEach(d => (byDay[d.date] ??= []).push(d));
+  $("careBody").innerHTML = `
+    ${missed.length ? `<div class="callout bad"><strong>Missed doses:</strong><ul>${missed.slice(-5).map(d => `<li>${esc(d.name)} ${esc(d.dose)}, ${fmtTime(d.hhmm)} on ${longDate(d.date)}</li>`).join("")}</ul></div>` : ""}
+    <h3>${day === localDate(Date.now(), data.tz) ? "Today" : "First day"}: ${today.filter(d => d.status === "taken").length} of ${today.length} taken</h3>
+    ${today.map(d => `<div class="dose ${STATUS[d.status].cls}"><div>${doseLine(d)}<div class="dstatus">${STATUS[d.status].label(d)}</div></div></div>`).join("")}
+    <details class="more"><summary>All days</summary>
+      ${Object.keys(byDay).sort().map(k => `<div class="dayrow"><span class="dayname">${new Date(k + "T12:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</span>
+        ${byDay[k].map(d => `<span class="chip ${STATUS[d.status].cls}" title="${esc(`${fmtTime(d.hhmm)} ${d.name}: ${d.status}`)}">${fmtTime(d.hhmm)} ${esc(d.name)}</span>`).join("")}</div>`).join("")}
+    </details>
+    ${data.notScheduled.length ? `<p class="note">Not tracked here: ${data.notScheduled.map(n => `${esc(n.name)} (${esc(n.reason)})`).join("; ")}</p>` : ""}`;
+  $("careUpdated").textContent = data.lastSyncAt ? `Last checked their calendar at ${clock(data.lastSyncAt, true)}.` : "";
+}
+
+// Family links (?c=...) open straight into the read-only family view
+(() => {
+  const c = new URLSearchParams(location.search).get("c");
+  if (!c) return;
+  ["steps", "s1", "s2", "s3", "s4"].forEach(id => $(id).classList.add("hidden"));
+  $("sCare").classList.remove("hidden");
+  if (!convexClient) { $("checkNow").classList.add("hidden"); $("careBody").innerHTML = `<p class="muted">This page needs the backend, which isn't set up.</p>`; return; }
+  // Live query: re-renders whenever a dose changes, e.g. when the backend sees a check-off in Google
+  convexClient.onUpdate("plans:forCaregiver", { careToken: c }, renderCare);
+  const checkNow = async () => {
+    $("checkNow").disabled = true;
+    try { await convexClient.action("google:syncNow", { careToken: c }); } catch (err) { console.error(err); }
+    setTimeout(() => $("checkNow").disabled = false, 3000);
+  };
+  $("checkNow").onclick = checkNow;
+  checkNow();
+})();
 
 // ---------- Photo upload + OCR (in-browser Tesseract.js; production would send the image to the backend) ----------
 const SAMPLE_PHOTO = "samples/sample-discharge-photo.jpg";
@@ -665,6 +901,7 @@ function setPhoto(blob) {
   ocrLines = [];
   $("photoPreview").src = photoUrl || "";
   $("photoWrap").classList.toggle("hidden", !photoUrl);
+  $("dropzone").classList.toggle("hidden", !!photoUrl);
 }
 
 async function readPhoto(blob) {
@@ -692,11 +929,25 @@ async function readPhoto(blob) {
   }
 }
 
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+function takePhoto(file) {
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { $("ocrMsg").textContent = "That isn't a photo. Please choose a JPG or PNG picture of your paper."; return; }
+  if (file.size > MAX_PHOTO_BYTES) { $("ocrMsg").textContent = "That photo is over 10 MB. Please choose a smaller one."; return; }
+  readPhoto(file);
+}
+
 $("photoInput").onchange = e => {
   const file = e.target.files[0];
   e.target.value = ""; // allow picking the same file again
-  if (file) readPhoto(file);
+  takePhoto(file);
 };
+
+// Drag and drop onto the drop area
+const dz = $("dropzone");
+["dragenter", "dragover"].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => dz.addEventListener(t, () => dz.classList.remove("over")));
+dz.addEventListener("drop", e => { e.preventDefault(); takePhoto(e.dataTransfer.files[0]); });
 
 $("loadSamplePhoto").onclick = async () => {
   try {
@@ -713,7 +964,7 @@ $("loadSamplePhoto").onclick = async () => {
 const STEP_IDS = ["s1", "s2", "s3", "s4"];
 function show(n) {
   STEP_IDS.forEach((id, i) => $(id).classList.toggle("hidden", i !== n - 1));
-  document.querySelectorAll("#steps .step").forEach((el, i) => el.classList.toggle("on", i === n - 1));
+  document.querySelectorAll("#steps .step").forEach((el, i) => { el.classList.toggle("on", i === n - 1); el.classList.toggle("done", i < n - 1); });
   window.scrollTo(0, 0);
 }
 
