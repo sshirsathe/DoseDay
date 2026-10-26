@@ -1,5 +1,8 @@
 # DoseDay
-Project repo (Shruti, Diane, Marin, Sasha)
+Shruti Shirsathe
+Diane Nguyen
+Marin Perez
+Sasha Batoukova
 
 ## Demo
 - Open `index.html`. On step 1, upload a photo of a discharge sheet or click **Use sample photo**.
