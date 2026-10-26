@@ -1,4 +1,4 @@
-# calhacks2026
+# DoseDay
 Project repo (Shruti, Diane, Marin, Sasha)
 
 ## Demo
