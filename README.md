@@ -1,4 +1,5 @@
 # DoseDay
+Contributors:
 Shruti Shirsathe
 Diane Nguyen
 Marin Perez
